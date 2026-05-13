@@ -1373,8 +1373,8 @@ footer{background:var(--black);border-top:none;padding:5rem 0 2.8rem;}
 .team-mainline{
   display:flex;
   align-items:flex-start;
-  justify-content:space-between;
-  gap:1.8rem;
+  justify-content:flex-start;
+  gap:1.2rem;
   margin-bottom:.75rem;
   min-width:0;
 }
@@ -1394,15 +1394,7 @@ footer{background:var(--black);border-top:none;padding:5rem 0 2.8rem;}
   letter-spacing:.13em;
   text-transform:uppercase;
 }
-.team-index{
-  font-size:.68rem;
-  font-weight:800;
-  letter-spacing:.16em;
-  text-transform:uppercase;
-  color:#d4d4d8;
-  padding-top:.25rem;
-  white-space:nowrap;
-}
+.team-index{display:none;}
 .team-degrees{
   display:flex;
   flex-direction:column;
@@ -1414,7 +1406,7 @@ footer{background:var(--black);border-top:none;padding:5rem 0 2.8rem;}
 .team-degree{
   display:flex;
   align-items:flex-start;
-  gap:.65rem;
+  gap:.7rem;
   font-size:.93rem;
   font-weight:800;
   color:#303442;
@@ -1424,10 +1416,12 @@ footer{background:var(--black);border-top:none;padding:5rem 0 2.8rem;}
 }
 .team-degree::before{
   content:'';
-  width:7px;height:7px;border-radius:50%;
-  margin-top:.49em;
-  background:linear-gradient(135deg,var(--purple),var(--purple-dark));
-  box-shadow:0 0 0 6px rgba(139,92,246,.085);
+  width:2px;
+  height:1.1em;
+  border-radius:2px;
+  margin-top:.18em;
+  background:linear-gradient(180deg,var(--purple),var(--purple-dark));
+  box-shadow:none;
   flex-shrink:0;
 }
 .team-degree em{font-style:normal;color:var(--purple);font-weight:850;}
@@ -3054,7 +3048,7 @@ document.querySelectorAll('#langBtn,#langBtnFooter').forEach(btn=>{
       methodP:'Pragmatismo e orientamento al risultato. Combiniamo ricerca avanzata e applicazione pratica per affiancare i nostri utenti nel loro percorso di crescita patrimoniale.',
       stepH:['Aggregazione dei dati','Analisi quantitativa','Ottimizzazione del portafoglio','Monitoraggio continuo'],
       stepP:['Connettiamo in modo sicuro (read-only, PSD2) tutti i tuoi conti bancari, broker, conti deposito e beni fisici. Una sola fonte di verità per tutto il tuo patrimonio.','I nostri modelli calcolano esposizione al rischio, correlazione tra asset, Sharpe ratio e deviazione standard su tutti i tuoi investimenti in tempo reale.',"Mean-Variance, Black-Litterman, Risk Parity: l'AI sceglie l'algoritmo più adatto al tuo profilo e genera raccomandazioni di ribilanciamento concrete.",'Alert personalizzati, report mensili automatici, simulazioni what-if. Il sistema lavora 24/7 per tenerti aggiornato su ogni variazione rilevante.'],
-      teamLabel:'Team',teamH2:'Chi siamo',teamNote:'Fintech guidata dai founder',
+      teamLabel:'Team imprenditoriale',teamH2:'Chi siamo',teamNote:'Fintech guidata dai founder',
       teamP:'Un team multidisciplinare che unisce economia, informatica, matematica e fisica teorica per rendere accessibili strumenti quantitativi avanzati agli investitori retail.',
       teamNames:['Gianluca Giusti','Federico Giusti','Lorenzo Baroni','Andrea Nicoletti'],
       teamRoles:['Co-Founder & CEO','Co-Founder & CTO','Co-Founder & Head of Quant Research','Co-Founder & Head of Quant Development'],
