@@ -4,7 +4,7 @@
       navLinks:['Funzionalità','Chi siamo','Tecnologia','Sicurezza','Pricing'],
       navCta:'Inizia ora',
       heroSub:'Unifica il tuo patrimonio e ottimizzalo con Modelli Quantitativi e Intelligenza Artificiale.',
-      heroBtn1:'Accedi alla beta privata',heroBtn2:'Guarda la demo →',
+      heroBtn1:'Accedi alla beta privata',heroBtn2:'Guarda la demo',
       heroCardLbl:'Portfolio overview — Aggiornato in tempo reale',heroLive:'Live',
       hkpiLbl:['Net worth totale','Performance YTD','Sharpe ratio','Asset allocati'],
       hkpiMeta:['+12.4% questo mese','+5.2% vs benchmark','Profilo ottimizzato','Ben diversificato'],
@@ -44,7 +44,7 @@
       methodP:'Pragmatismo e orientamento al risultato. Combiniamo ricerca avanzata e applicazione pratica per affiancare i nostri utenti nel loro percorso di crescita patrimoniale.',
       stepH:['Aggregazione dei dati','Analisi quantitativa','Ottimizzazione del portafoglio','Monitoraggio continuo'],
       stepP:['Connettiamo in modo sicuro (read-only, PSD2) tutti i tuoi conti bancari, broker, conti deposito e beni fisici. Una sola fonte di verità per tutto il tuo patrimonio.','I nostri modelli calcolano esposizione al rischio, correlazione tra asset, Sharpe ratio e deviazione standard su tutti i tuoi investimenti in tempo reale.',"Mean-Variance, Black-Litterman, Risk Parity: l'AI sceglie l'algoritmo più adatto al tuo profilo e genera raccomandazioni di ribilanciamento concrete.",'Alert personalizzati, report mensili automatici, simulazioni what-if. Il sistema lavora 24/7 per tenerti aggiornato su ogni variazione rilevante.'],
-      teamLabel:'Team',teamH2:'Chi siamo',teamNote:'Fintech guidata dai founder',
+      teamLabel:'Team imprenditoriale',teamH2:'Chi siamo',teamNote:'Fintech guidata dai founder',
       teamP:'Un team multidisciplinare che unisce economia, informatica, matematica e fisica teorica per rendere accessibili strumenti quantitativi avanzati agli investitori retail.',
       teamNames:['Gianluca Giusti','Federico Giusti','Lorenzo Baroni','Andrea Nicoletti'],
       teamRoles:['Co-Founder & CEO','Co-Founder & CTO','Co-Founder & Head of Quant Research','Co-Founder & Head of Quant Development'],
@@ -58,7 +58,7 @@
       testiP:'Investitori reali che usano Elara per analizzare e ottimizzare il proprio patrimonio. Non suggerimenti generici — risultati concreti.',
       pricingLabel:'Pricing',pricingH2:'Scegli il piano<br>perfetto per te',
       pricingP:'Prezzi trasparenti, nessun costo nascosto. Annulla quando vuoi, nessun vincolo contrattuale.',
-      planNm:['Starter','Pro','Advanced'],planPrice:['Gratis','€6,99','€21,99'],planPer:['per sempre','/mese','/mese'],
+      planNm:['Starter','Pro','Enterprise'],planPrice:['Gratis','€29','Custom'],planPer:['per sempre','/mese','su misura'],
       planDesc:['Perfetto per iniziare a tracciare il tuo patrimonio e esplorare le funzionalità base.','Per investitori seri che vogliono ottimizzare e massimizzare i rendimenti.','Per family office, wealth manager e team che gestiscono patrimoni complessi.'],
       planBtn:['Inizia gratis','Inizia 14 giorni gratis','Contatta il team sales'],planBadge:'Più popolare',
       ctaLabel:'contattaci',ctaP:'Unisciti a migliaia di investitori che stanno già usando Elara per gestire il loro patrimonio in modo intelligente e data-driven.',
@@ -73,7 +73,7 @@
       navLinks:['Features','About us','Technology','Security','Pricing'],
       navCta:'Get started',
       heroSub:'Unify your wealth and optimise it with Quantitative Models and Artificial Intelligence.',
-      heroBtn1:'Join the private beta',heroBtn2:'Watch the demo →',
+      heroBtn1:'Join the private beta',heroBtn2:'Watch the demo',
       heroCardLbl:'Portfolio overview — Updated in real time',heroLive:'Live',
       hkpiLbl:['Total net worth','YTD Performance','Sharpe ratio','Allocated assets'],
       hkpiMeta:['+12.4% this month','+5.2% vs benchmark','Optimised profile','Well diversified'],
@@ -127,7 +127,7 @@
       testiP:'Real investors using Elara to analyse and optimise their wealth. No generic advice — concrete results.',
       pricingLabel:'Pricing',pricingH2:'Choose the plan<br>that\'s right for you',
       pricingP:'Transparent pricing, no hidden costs. Cancel anytime, no contractual obligations.',
-      planNm:['Starter','Pro','Advanced'],planPrice:['Free','€6.99','€21.99'],planPer:['forever','/month','/month'],
+      planNm:['Starter','Pro','Enterprise'],planPrice:['Free','€29','Custom'],planPer:['forever','/month','tailored'],
       planDesc:['Perfect to start tracking your wealth and explore the basic features.','For serious investors who want to optimise and maximise returns.','For family offices, wealth managers and teams managing complex portfolios.'],
       planBtn:['Start free','Start 14-day free trial','Contact sales team'],planBadge:'Most popular',
       ctaLabel:'contact us',ctaP:'Join thousands of investors already using Elara to manage their wealth intelligently and data-driven.',
@@ -186,7 +186,8 @@
     // hero subtitle + buttons
     _t(_q('#hero-sub'),t.heroSub);
     var b1=_q('#hero-btn1');if(b1){var lbl=b1.querySelector('.btn-label');_t(lbl||b1,t.heroBtn1);}
-    _t(_q('#hero-btn2'),t.heroBtn2);
+    var b2=_q('#hero-btn2');
+    if(b2){var lbl2=b2.querySelector('.btn-label');_t(lbl2||b2,t.heroBtn2);}
 
     // hero card
     _qq('.hcard-lbl').forEach(function(e){_t(e,t.heroCardLbl);});
