@@ -58,7 +58,7 @@
       testiP:'Investitori reali che usano Elara per analizzare e ottimizzare il proprio patrimonio. Non suggerimenti generici — risultati concreti.',
       pricingLabel:'Pricing',pricingH2:'Scegli il piano<br>perfetto per te',
       pricingP:'Prezzi trasparenti, nessun costo nascosto. Annulla quando vuoi, nessun vincolo contrattuale.',
-      planNm:['Starter','Pro','Advanced'],planPrice:['Gratis','€6.99','€21.99'],planPer:['per sempre','/mese','/mese'],
+      planNm:['Starter','Pro','Advanced'],planPrice:['Gratis','€6,99','€21,99'],planPer:['per sempre','/mese','/mese'],
       planDesc:['Perfetto per iniziare a tracciare il tuo patrimonio e esplorare le funzionalità base.','Per investitori seri che vogliono ottimizzare e massimizzare i rendimenti.','Per family office, wealth manager e team che gestiscono patrimoni complessi.'],
       planBtn:['Inizia gratis','Inizia 14 giorni gratis','Contatta il team sales'],planBadge:'Più popolare',
       ctaLabel:'contattaci',ctaP:'Unisciti a migliaia di investitori che stanno già usando Elara per gestire il loro patrimonio in modo intelligente e data-driven.',
