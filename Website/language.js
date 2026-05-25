@@ -24,9 +24,9 @@
       scardLi:[['Mean-Variance Optimization','Black-Litterman Model','Risk Parity & Sharpe Max'],['Aggregazione bancaria PSD2','Beni fisici e immobili','Dashboard real-time'],['Analisi del rischio istantanea','Tax-loss harvesting automatico','Simulazioni what-if']],
       demoLabel:'Demo interattiva',demoH2:'Parla con il tuo copilota finanziario',
       demoP:'Premi una domanda per vedere come Elara analizza il tuo portafoglio in tempo reale.',
-      chatName:'Elara AI',chatStatus:'Online — Analisi attiva',
+      chatName:'Elara AI',chatStatus:'Copilota attivo',
       chatInit:'Ciao! Sono Elara, il tuo copilota finanziario. Ho analizzato il tuo portafoglio. Cosa vuoi sapere?',
-      chatPlaceholder:'Chiedimi qualcosa sul tuo patrimonio…',chatSend:'Invia →',
+      chatPlaceholder:'Chiedimi qualcosa sul tuo patrimonio…',chatSend:'Invia',
       pills:['Sto prendendo troppo rischio?','Il portafoglio è diversificato?','Come ottimizzare le tasse?','Quanto crypto dovrei avere?'],
       algoLabel:'Tecnologia',
       algoH2:'Algoritmi istituzionali<br>di livello internazionale',
@@ -93,9 +93,9 @@
       scardLi:[['Mean-Variance Optimization','Black-Litterman Model','Risk Parity & Sharpe Max'],['PSD2 bank aggregation','Physical & real estate assets','Real-time dashboard'],['Instant risk analysis','Automatic tax-loss harvesting','What-if simulations']],
       demoLabel:'Interactive demo',demoH2:'Talk to your financial copilot',
       demoP:'Press a question to see how Elara analyses your portfolio in real time.',
-      chatName:'Elara AI',chatStatus:'Online — Active analysis',
+      chatName:'Elara AI',chatStatus:'Active copilot',
       chatInit:"Hi! I'm Elara, your financial copilot. I've analysed your portfolio. What would you like to know?",
-      chatPlaceholder:'Ask me anything about your wealth…',chatSend:'Send →',
+      chatPlaceholder:'Ask me anything about your wealth…',chatSend:'Send',
       pills:['Am I taking too much risk?','Is my portfolio diversified?','How to optimise taxes?','How much crypto should I hold?'],
       algoLabel:'Technology',
       algoH2:'Institutional-grade<br>international algorithms',
@@ -231,7 +231,10 @@
       var cst=_q('.chat-hdr-status',ds);if(cst)cst.innerHTML='<span class="online-dot"></span>'+t.chatStatus;
       _t(_q('.ai-bubble-init p',ds),t.chatInit);
       var ci=_q('.chat-text-input',ds);if(ci)ci.placeholder=t.chatPlaceholder;
-      _t(_q('.chat-send',ds),t.chatSend);
+      var sendBtn=_q('.chat-send',ds);
+      if(sendBtn){
+        sendBtn.setAttribute('aria-label',t.chatSend);
+      }
       _qq('.qpill',ds).forEach(function(p,i){if(t.pills[i])_t(p,t.pills[i]);});
       resetAiChat(t);
     }
