@@ -76,7 +76,7 @@
     <!-- Buttons -->
     <div class="hero-btns a-up" style="transition-delay:.4s">
       <a href="#cta" class="btn-primary btn-morph" id="hero-btn1"><span class="btn-label">Accedi alla beta privata</span><span class="btn-arrow"><svg viewBox="0 0 24 24"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></span></a>
-      <a href="#ai-demo" class="btn-secondary" id="hero-btn2">Guarda la demo →</a>
+      <a href="#ai-demo" class="btn-secondary" id="hero-btn2">Guarda la demo</a>
     </div>
 
     <!-- Floating dashboard card -->
@@ -265,7 +265,12 @@
       </div>
       <div class="chat-input-row">
         <input type="text" class="chat-text-input" placeholder="Chiedimi qualcosa sul tuo patrimonio…"/>
-        <button class="chat-send">Invia →</button>
+        <button class="chat-send" aria-label="Invia">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 19V5"></path>
+            <path d="M5 12l7-7 7 7"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </div>
