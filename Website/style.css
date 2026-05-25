@@ -1255,17 +1255,15 @@ footer{background:var(--black);border-top:none;padding:5rem 0 2.8rem;}
 ================================================ */
 .team-section{
   padding:9rem 0;
-  background:var(--white);
+  background:var(--gray-100);
   position:relative;
   overflow:hidden;
 }
+
 .team-section::before{
-  content:'';
-  position:absolute;inset:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 70% 45% at 50% 0%,rgba(139,92,246,.075),transparent 62%),
-    radial-gradient(ellipse 38% 32% at 86% 18%,rgba(99,102,241,.045),transparent 55%);
+  display:none;
 }
+
 .team-layout{
   position:relative;z-index:1;
   display:grid;
