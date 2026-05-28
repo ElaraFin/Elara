@@ -67,8 +67,7 @@
       footerColH:['Prodotto','Risorse','Azienda','Legale'],
       footerColLinks:[['Funzionalità','Pricing','Integrazioni','Changelog','Roadmap'],['Documentazione','Blog','Guide','API Reference','Help Center'],['Chi siamo','Careers','Press Kit','Partner','Contatti'],['Privacy Policy','Termini di servizio','Cookie Policy','Conformità','Sicurezza']],
       footerCopy:'© 2026 Elara Technologies S.r.l. — Tutti i diritti riservati.',footerStatus:'Stato dei servizi',toggle:'EN',
-      heroH1:'<span class="hw"><span class="hw-inner">Il</span></span><span class="hw"><span class="hw-inner">tuo</span></span><span class="hw"><span class="hw-inner">CFO</span></span><span class="hw"><span class="hw-inner">personale</span></span><br><span class="hw hw-accent"><span class="hw-inner">quantitativo</span></span>'
-    },
+      heroH1:'<span class="hw"><span class="hw-inner">La</span></span><span class="hw"><span class="hw-inner">finanza</span></span><span class="hw"><span class="hw-inner">quantitativa</span></span><br><span class="hw hw-accent"><span class="hw-inner">per ogni investitore</span></span>'    },
     en:{
       navLinks:['Features','About us','Technology','Security','Pricing'],
       navCta:'Get started',
@@ -136,8 +135,7 @@
       footerColH:['Product','Resources','Company','Legal'],
       footerColLinks:[['Features','Pricing','Integrations','Changelog','Roadmap'],['Documentation','Blog','Guides','API Reference','Help Center'],['About us','Careers','Press Kit','Partners','Contact'],['Privacy Policy','Terms of Service','Cookie Policy','Compliance','Security']],
       footerCopy:'© 2026 Elara Technologies S.r.l. — All rights reserved.',footerStatus:'Service status',toggle:'IT',
-      heroH1:'<span class="hw"><span class="hw-inner">Your</span></span><span class="hw"><span class="hw-inner">personal</span></span><span class="hw"><span class="hw-inner">quantitative</span></span><br><span class="hw hw-accent"><span class="hw-inner">CFO</span></span>'
-    }
+      heroH1:'<span class="hw"><span class="hw-inner">Quantitative</span></span><span class="hw"><span class="hw-inner">finance</span></span><br><span class="hw hw-accent"><span class="hw-inner">for every investor</span></span>'    }
   };
 
   var _lang = localStorage.getItem('elara_lang')||'it';
