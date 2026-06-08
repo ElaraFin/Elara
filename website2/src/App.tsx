@@ -3,7 +3,9 @@ import { AnimatePresence, motion, type Variants } from 'framer-motion';
 import { ArrowRight, Check, Grid3X3, LineChart, Menu, ShieldCheck, Sparkles, X } from 'lucide-react';
 import { Area, AreaChart, ResponsiveContainer } from 'recharts';
 
-const heroVideo = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260207_050933_33e2620d-09cd-43a2-80ef-4cdbb42f4194.mp4';
+
+const heroVideo = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_105406_16f4600d-7a92-4292-b96e-b19156c7830a.mp4';
+const heroVideo_old = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260207_050933_33e2620d-09cd-43a2-80ef-4cdbb42f4194.mp4';
 const cinematicVideo = 'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260215_121759_424f8e9c-d8bd-4974-9567-52709dfb6842.mp4';
 
 const reveal: Variants = {
@@ -13,6 +15,51 @@ const reveal: Variants = {
 
 function Logo() {
   return <div className="text-[26px] font-black tracking-[-0.08em] lowercase">elara</div>;
+}
+
+function InstitutionStrip() {
+  const logos = [
+    { name: "Università di Pisa", src: "/logos/unipi.jpg" },
+    { name: "Politecnico di Torino", src: "/logos/polito.jpg" },
+    { name: "Università di Bologna", src: "/logos/unibo.jpg" },
+    { name: "I3P", src: "/logos/i3p.jpg" },
+  ];
+
+  return (
+    <section className="bg-white px-6 pt-14 pb-8 text-center">
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={reveal}
+        className="mx-auto max-w-5xl"
+      >
+        <p className="text-xs font-semibold uppercase tracking-[0.24em] text-black/35">
+          Where we started
+        </p>
+
+        <div className="relative mx-auto mt-7 max-w-4xl overflow-hidden">
+          <div className="pointer-events-none absolute left-0 top-0 z-10 h-full w-20 bg-gradient-to-r from-white to-transparent" />
+          <div className="pointer-events-none absolute right-0 top-0 z-10 h-full w-20 bg-gradient-to-l from-white to-transparent" />
+
+          <div className="flex w-max animate-logo-scroll items-center gap-10">
+            {[...logos, ...logos, ...logos, ...logos].map((logo, index) => (
+              <div
+                key={`${logo.name}-${index}`}
+                className="flex h-16 w-44 shrink-0 items-center justify-center"
+              >
+                <img
+                  src={logo.src}
+                  alt={logo.name}
+                  className="max-h-12 max-w-full object-contain grayscale opacity-35 transition duration-300 hover:grayscale-0 hover:opacity-80"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+    </section>
+  );
 }
 
 function Navbar() {
@@ -78,29 +125,22 @@ function Navbar() {
 }
 
 function Hero() {
-  const stats = [
-    ['Patrimonio unificato', 'Banche, broker, immobili'],
-    ['Quant engine', 'MVO, Black-Litterman, Sharpe'],
-    ['AI companion', 'Insight e scenari what-if']
-  ];
   return (
     <section className="min-h-screen bg-white p-2 md:p-3">
       <div className="relative min-h-[calc(100vh-16px)] overflow-hidden rounded-[2rem] bg-black md:min-h-[calc(100vh-24px)] md:rounded-[2.1rem]">
-        <video src={heroVideo} autoPlay loop muted playsInline className="absolute inset-0 h-full w-full scale-125 object-cover object-left-top opacity-80" />
-        <div className="absolute inset-0 bg-gradient-to-r from-black via-black/45 to-black/5" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/25" />
+        <video src={heroVideo} autoPlay loop muted playsInline className="absolute inset-0 h-full w-full scale-125 object-cover object-left-top brightness-125 saturate-150 contrast-110" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/55 via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/35 via-transparent to-black/10" />
         <Navbar />
-        <motion.div initial="hidden" animate="visible" variants={reveal} className="relative z-10 flex min-h-[calc(100vh-16px)] flex-col justify-end px-6 pb-20 pt-28 text-white md:px-[10vw] md:pb-24">
+        <motion.div initial="hidden" animate="visible" variants={reveal} className="relative z-10 flex min-h-[calc(100vh-16px)] flex-col justify-center px-6 pt-20 text-white md:px-[10vw] md:pt-24">
           <div className="mb-7 w-max rounded-full bg-white/12 px-5 py-2.5 text-sm font-medium backdrop-blur-xl">Private beta now open</div>
-          <h1 className="max-w-[950px] text-[16vw] font-semibold leading-[.86] tracking-[-.085em] md:text-[9vw] lg:text-[96px]">Quantitative finance,<br />for every investor.</h1>
-          <p className="mt-7 max-w-2xl text-xl leading-tight text-white/88 md:text-[28px]">Unifica il tuo patrimonio e ottimizzalo con modelli quantitativi e intelligenza artificiale: conti, broker, immobili e asset manuali in una sola dashboard.</p>
+          <h1 className="max-w-[950px] text-[16vw] font-semibold leading-[.86] tracking-[-.085em] md:text-[9vw] lg:text-[96px]">Quantitative finance,<br />in your pocket.</h1>
+          <p className="mt-7 max-w-2xl text-xl leading-tight text-white/88 md:text-[28px]">Unifica il tuo patrimonio e ottimizzalo con modelli quantitativi e intelligenza artificiale.</p>
           <div className="mt-9 flex items-center gap-5">
             <button className="group flex items-center gap-3 rounded-full bg-white px-7 py-4 font-semibold text-black transition hover:scale-[1.03]">Join beta <ArrowRight className="transition group-hover:translate-x-1" size={18}/></button>
             <button className="rounded-full px-7 py-4 font-semibold text-white transition hover:bg-white/10">Watch demo</button>
           </div>
-          <div className="mt-20 grid max-w-4xl grid-cols-1 gap-5 md:grid-cols-3">
-            {stats.map((s, i) => <div key={s[0]} className="border-white/25 md:border-l md:pl-6"><p className="font-bold">{s[0]}</p><p className="mt-1 text-sm text-white/78">{s[1]}</p></div>)}
-          </div>
+          
         </motion.div>
       </div>
     </section>
@@ -108,14 +148,29 @@ function Hero() {
 }
 
 function Trust() {
-  return <section className="bg-white px-6 py-24 text-center">
-    <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={reveal}>
-      <p className="mx-auto max-w-xl text-sm text-black/55">Built for investors who want institutional-level portfolio intelligence without complexity.</p>
-      <div className="mx-auto mt-10 flex max-w-5xl flex-wrap items-center justify-center gap-10 text-3xl font-bold tracking-tighter text-black/20 md:gap-16">
-        <span>PSD2</span><span>GDPR</span><span>AES-256</span><span>Read-only</span><span>ISO-ready</span>
-      </div>
-    </motion.div>
-  </section>
+  return (
+    <section className="bg-white px-6 pt-8 pb-16 text-center">
+      <motion.div
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={reveal}
+        className="mx-auto max-w-6xl"
+      >
+        <p className="mx-auto max-w-2xl text-sm font-medium leading-relaxed text-black/55 md:text-[15px]">
+          Built for investors who want institutional-level portfolio intelligence without complexity.
+        </p>
+
+        <div className="mx-auto mt-9 flex max-w-5xl flex-wrap items-center justify-center gap-x-10 gap-y-4 text-3xl font-bold tracking-tighter text-black/20 md:gap-x-16">
+          <span>PSD2</span>
+          <span>GDPR</span>
+          <span>AES-256</span>
+          <span>Read-only</span>
+          <span>ISO-ready</span>
+        </div>
+      </motion.div>
+    </section>
+  );
 }
 
 function HowItWorks() {
@@ -180,24 +235,107 @@ function HowItWorks() {
 
 function StepVisual({ type }: { type: string }) {
   if (type === 'connect') {
-    return <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_18%_18%,#ffffff,transparent_28%),linear-gradient(135deg,#dfe5ec,#bfc7bf_48%,#202020_49%,#0f0f0f)]">
-      <div className="absolute -left-20 bottom-[-8%] h-[88%] w-[82%] rounded-tr-[10rem] bg-black/82" />
-      <div className="absolute right-5 top-10 w-[76%] rounded-[1.5rem] bg-black/72 p-4 text-white shadow-2xl backdrop-blur-xl transition duration-700 group-hover:-translate-y-2 group-hover:scale-[1.02]">
-        <div className="flex items-center gap-3">
-          <div className="grid size-12 place-items-center rounded-xl bg-white/12"><ShieldCheck size={20}/></div>
-          <div><p className="font-semibold leading-tight">Secure aggregation</p><p className="text-xs text-white/55">PSD2 · Read-only</p></div>
-          <Check className="ml-auto" size={18}/>
-        </div>
-        <div className="mt-4 grid grid-cols-3 gap-2 text-center text-[10px] text-white/70">
-          <span className="rounded-full bg-white/10 py-2">Bank</span><span className="rounded-full bg-white/10 py-2">Broker</span><span className="rounded-full bg-white/10 py-2">Assets</span>
-        </div>
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-[radial-gradient(circle_at_78%_18%,#b979ff,transparent_28%),linear-gradient(135deg,#201038,#6f35f5_52%,#d8c4ff)]">
+      {/* Ambient glow */}
+      <div className="absolute left-1/2 top-10 h-[120%] w-[78%] -translate-x-1/2 rounded-[3rem] bg-white/12 blur-3xl" />
+      <div className="absolute -right-20 top-24 size-56 rounded-full bg-white/20 blur-3xl" />
+      <div className="absolute -left-20 bottom-10 size-48 rounded-full bg-black/25 blur-3xl" />
+
+      {/* Step number */}
+      <div className="absolute left-6 top-6 z-30 grid size-11 place-items-center rounded-2xl bg-white/15 text-xl font-bold text-white/75 backdrop-blur-md">
+        1
       </div>
-      <div className="absolute bottom-7 left-7 right-7 rounded-2xl bg-white/12 p-3 text-white backdrop-blur-md">
-        <div className="flex items-center justify-between text-xs"><span>3 accounts connected</span><span className="text-[#c6ff6e]">Live</span></div>
+
+      {/* Phone — same style as section 3 */}
+      <div className="absolute left-1/2 top-8 z-20 h-[118%] w-[70%] -translate-x-1/2 rounded-[2.9rem] bg-white p-4 shadow-[0_28px_90px_rgba(0,0,0,.28)] transition duration-700 group-hover:-translate-y-2 group-hover:scale-[1.02]">
+        {/* Dynamic island */}
+        <div className="mx-auto mb-5 h-5 w-24 rounded-full bg-black" />
+
+        {/* Phone header */}
+        <div className="flex items-center justify-between">
+          <p className="font-black lowercase tracking-[-.06em] text-black">
+            elara
+          </p>
+
+          <span className="rounded-full bg-black px-3 py-1 text-[10px] font-bold text-white">
+            Live
+          </span>
+        </div>
+
+        {/* Phone screen */}
+        <div className="relative mt-5 h-[275px] overflow-hidden rounded-[2rem] bg-[#101010] p-4 text-white">
+          {/* Background */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_38%,rgba(198,255,110,.14),transparent_25%),radial-gradient(circle_at_18%_10%,rgba(255,255,255,.12),transparent_26%)]" />
+
+          {/* Wallet-style card stack */}
+          <div className="absolute left-1/2 top-[24px] z-20 h-[230px] w-[236px] -translate-x-1/2">
+            {/* Card 1 - Banco BPM */}
+            <div className="absolute left-1/2 top-0 h-[82px] w-[214px] -translate-x-1/2 overflow-hidden rounded-[1.35rem] border border-white/15 bg-white shadow-2xl">
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,#edf7fb_0%,#ffffff_45%,#dceef1_100%)]" />
+              <div className="relative flex h-full items-center justify-center px-5">
+                <img
+                  src="/logos/bpm.png"
+                  alt="Banco BPM"
+                  className="max-h-12 max-w-[174px] object-contain"
+                />
+              </div>
+            </div>
+
+            {/* Card 2 - UniCredit */}
+            <div className="absolute left-1/2 top-[50px] h-[82px] w-[222px] -translate-x-1/2 overflow-hidden rounded-[1.35rem] border border-white/15 bg-white shadow-2xl">
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,#ffffff_0%,#f4f4f4_45%,#e8e8e8_100%)]" />
+              <div className="relative flex h-full items-center justify-center px-5">
+                <img
+                  src="/logos/unicredit.png"
+                  alt="UniCredit"
+                  className="max-h-12 max-w-[184px] object-contain"
+                />
+              </div>
+            </div>
+
+            {/* Card 3 - Trade Republic */}
+            <div className="absolute left-1/2 top-[100px] h-[82px] w-[230px] -translate-x-1/2 overflow-hidden rounded-[1.35rem] border border-white/15 bg-black shadow-2xl">
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,#050505_0%,#171717_52%,#000000_100%)]" />
+              <div className="relative flex h-full items-center justify-center px-5">
+                <img
+                  src="/logos/traderepublic.png"
+                  alt="Trade Republic"
+                  className="max-h-10 max-w-[190px] object-contain"
+                />
+              </div>
+            </div>
+
+            {/* Card 4 - Revolut */}
+            <div className="absolute left-1/2 top-[150px] h-[82px] w-[236px] -translate-x-1/2 overflow-hidden rounded-[1.35rem] border border-white/15 bg-[#5faee8] shadow-2xl">
+              <div className="absolute inset-0 bg-[linear-gradient(135deg,#77c7ff_0%,#3e95d8_55%,#1f6eb5_100%)]" />
+              <div className="relative flex h-full items-center justify-center px-5">
+                <img
+                  src="/logos/revolut.png"
+                  alt="Revolut"
+                  className="max-h-12 max-w-[184px] object-contain"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom mini status */}
+          <div className="absolute bottom-4 left-4 right-4 z-30 rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-xl">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-semibold text-white">
+                4 sources connected
+              </span>
+
+              <span className="text-[#c6ff6e]">
+                Live
+              </span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  }
-
+  );
+}
   if (type === 'dashboard') {
     return <div className="absolute inset-0 overflow-hidden bg-[linear-gradient(135deg,#f7f7f4,#e6e4de_52%,#d6d2c7)]">
       <div className="absolute inset-0 opacity-40 bg-[radial-gradient(circle_at_15%_12%,white,transparent_32%),radial-gradient(circle_at_90%_85%,#c8c2b5,transparent_28%)]" />
@@ -335,110 +473,507 @@ function PhoneMockup() {
 }
 
 function CopilotSection() {
-  const questions = [
+  type CopilotQuestion = {
+  q: string;
+  title: string;
+  summary: string;
+  metrics: [string, string][];
+  chartType: 'risk' | 'pie' | 'tax' | 'liquidity';
+  bars: [string, number][];
+};
+
+  const questions: CopilotQuestion[] = [
     {
       q: 'Am I taking too much risk?',
-      a: 'Your portfolio risk is moderately high: 42% is concentrated in three positions and volatility is above your target profile. Elara would reduce single-stock exposure and move part of the excess risk into diversified ETFs.'
+      title: 'Risk is moderately high, mainly due to concentration.',
+      summary:
+        'Your portfolio risk score is 72/100. The main driver is concentration: 42% of the portfolio is held in three positions. This means that a small number of assets can move your total net worth more than expected. A possible improvement would be to gradually reduce single-position exposure and move part of the risk into broader, diversified ETF exposure.',
+      metrics: [
+        ['Risk score', '72/100'],
+        ['Top 3', '42%'],
+        ['Volatility', '18.6%']
+      ],
+      chartType: 'risk',
+      bars: [
+        ['Stocks', 42],
+        ['ETFs', 31],
+        ['Crypto', 14],
+        ['Cash', 13]
+      ]
     },
     {
       q: 'Is my portfolio diversified?',
-      a: 'You are diversified across asset classes, but not enough across geographies. Most of your exposure is Europe-focused. Adding global equity and short-term bond exposure would improve balance without changing your long-term strategy.'
+      title: 'Diversification is good by asset class, weaker by geography.',
+      summary:
+        'You are diversified across different asset classes, but geographic exposure is still unbalanced. Europe represents 61% of the portfolio, while global and US exposure are relatively low compared with a neutral benchmark. This does not mean the portfolio is wrong, but it means your results depend heavily on one macro area.',
+      metrics: [
+        ['Europe', '61%'],
+        ['US', '18%'],
+        ['Global', '24%']
+      ],
+      chartType: 'pie',
+      bars: [
+        ['Europe', 61],
+        ['US', 18],
+        ['Global', 24],
+        ['EM', 7]
+      ]
     },
     {
       q: 'How can I optimize taxes?',
-      a: 'You could improve tax efficiency by prioritizing accumulation ETFs where appropriate, avoiding unnecessary sales, and reviewing underperforming positions for potential tax-loss harvesting opportunities.'
+      title: 'Tax efficiency can improve by reducing unnecessary turnover.',
+      summary:
+        'The portfolio appears reasonably tax efficient, but there is room to reduce avoidable tax drag. The main levers are limiting unnecessary sales, prioritizing accumulation instruments where appropriate, and reviewing underperforming positions only when there is a clear portfolio reason. Tax optimization should support the strategy, not drive it alone.',
+      metrics: [
+        ['Tax drag', '1.2%'],
+        ['Accum.', '58%'],
+        ['Turnover', 'Med']
+      ],
+      chartType: 'tax',
+      bars: [
+        ['Accumulation', 58],
+        ['Distributing', 24],
+        ['Realized gains', 12],
+        ['Offsets', 6]
+      ]
     },
     {
       q: 'How much liquidity should I keep?',
-      a: 'Based on your current net worth and spending profile, Elara would keep 6–9 months of expenses liquid. The remaining idle cash could be allocated gradually using a risk-controlled portfolio plan.'
+      title: 'Your liquidity buffer is healthy, but part of it may be idle.',
+      summary:
+        'Based on the current profile, a 6–9 month emergency buffer looks sufficient. Liquidity above that range may be useful for flexibility, but it can reduce long-term expected return if it stays idle for too long. A gradual deployment plan could move excess cash into the market without forcing a single entry point.',
+      metrics: [
+        ['Idle cash', '€18.4K'],
+        ['Buffer', '6–9 mo'],
+        ['Deployable', '€7.2K']
+      ],
+      chartType: 'liquidity',
+      bars: [
+        ['Buffer', 62],
+        ['Deployable', 24],
+        ['Needs', 14]
+      ]
     }
   ];
+
   const [active, setActive] = useState(0);
+  const [thinking, setThinking] = useState(false);
 
-  return <section id="product" className="bg-white px-3 pb-24">
-    <div className="grid min-h-screen overflow-hidden rounded-[2rem] bg-[#f4f3ef] md:grid-cols-[0.95fr_1.05fr]">
-      <div className="relative min-h-[520px] overflow-hidden bg-black p-6 md:p-10">
-        <video src={cinematicVideo} autoPlay loop muted playsInline className="absolute inset-0 h-full w-full object-cover opacity-55" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_45%_25%,rgba(123,57,252,.45),transparent_34%),linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.86))]" />
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: .8, ease: [0.16, 1, 0.3, 1] as const }}
-          className="relative z-10 flex h-full flex-col justify-between text-white"
-        >
-          <div>
-            <p className="w-max rounded-full bg-white/12 px-4 py-2 text-xs font-semibold backdrop-blur-xl">Interactive demo</p>
-            <h2 className="mt-7 max-w-xl text-5xl font-semibold leading-[.9] tracking-[-.075em] md:text-7xl">Talk to your financial copilot</h2>
-            <p className="mt-6 max-w-md text-xl leading-tight text-white/65">Ask Elara about risk, allocation, liquidity and portfolio actions using your connected wealth data.</p>
-          </div>
+  function handleQuestionClick(index: number) {
+    setActive(index);
+    setThinking(true);
 
-          <div className="mt-10 grid grid-cols-2 gap-3 text-sm md:max-w-md">
-            {[
-              ['Risk score', '72/100'],
-              ['Insights ready', '5'],
-              ['Connected sources', '4'],
-              ['Idle liquidity', '€18.4K']
-            ].map(([label, value]) => <div key={label} className="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl">
-              <p className="text-white/45">{label}</p><p className="mt-1 text-2xl font-semibold tracking-[-.04em]">{value}</p>
-            </div>)}
-          </div>
-        </motion.div>
+    setTimeout(() => {
+      setThinking(false);
+    }, 1400);
+  }
+
+  const activeQuestion = questions[active];
+
+  function ElaraAvatar() {
+    return (
+      <div className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-2xl bg-[#0b0820] p-1">
+        <img
+          src="/logos/Elara_logo_trasparent.png"
+          alt="Elara"
+          className="h-[92%] w-[92%] object-contain"
+        />
       </div>
+    );
+  }
 
-      <motion.div initial="hidden" whileInView="visible" viewport={{ once:true }} variants={reveal} className="flex items-center p-5 md:p-12">
-        <div className="w-full rounded-[2rem] border border-black/10 bg-white shadow-soft">
-          <div className="flex items-center justify-between border-b border-black/10 p-5 md:p-7">
-            <div className="flex items-center gap-3">
-              <div className="grid size-11 place-items-center rounded-2xl bg-[#efeaff] text-[#7b39fc]"><Sparkles size={20}/></div>
-              <div><p className="font-bold">Elara AI</p><p className="flex items-center gap-2 text-sm text-black/45"><span className="size-2 rounded-full bg-emerald-400"/> Active copilot</p></div>
+  function UserAvatar() {
+    return (
+      <div className="grid size-10 shrink-0 place-items-center rounded-2xl bg-[#f1f1ef] text-black">
+        <svg
+          viewBox="0 0 24 24"
+          className="size-5"
+          fill="none"
+          aria-hidden="true"
+        >
+          <circle
+            cx="12"
+            cy="8"
+            r="3.2"
+            stroke="black"
+            strokeOpacity="0.65"
+            strokeWidth="2"
+          />
+          <path
+            d="M5.5 20C6.4 16.4 8.7 14.6 12 14.6C15.3 14.6 17.6 16.4 18.5 20"
+            stroke="black"
+            strokeOpacity="0.65"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+    );
+  }
+
+  function MiniInsightChart({ item }: { item: CopilotQuestion }) {
+    if (item.chartType === 'risk') {
+      return (
+        <div className="mt-4 grid grid-cols-[1.15fr_.85fr] gap-3">
+          <div className="rounded-2xl bg-[#1f1f1f] p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-[11px] font-semibold text-white/40">
+                Risk trend
+              </p>
+
+              <p className="text-[11px] font-bold text-[#c6ff6e]">
+                72/100
+              </p>
             </div>
-            <span className="rounded-full bg-black px-4 py-2 text-xs font-semibold text-white">Live analysis</span>
+
+            <svg viewBox="0 0 180 90" className="h-24 w-full overflow-visible">
+              <path
+                d="M0 68 C22 52, 38 63, 56 42 S93 50, 114 31 S150 35, 178 14"
+                fill="none"
+                stroke="#c6ff6e"
+                strokeWidth="4"
+                strokeLinecap="round"
+              />
+              <path
+                d="M0 68 C22 52, 38 63, 56 42 S93 50, 114 31 S150 35, 178 14 L178 90 L0 90 Z"
+                fill="#c6ff6e"
+                opacity=".16"
+              />
+              <line x1="0" y1="72" x2="180" y2="72" stroke="white" strokeOpacity=".08" />
+              <line x1="0" y1="42" x2="180" y2="42" stroke="white" strokeOpacity=".08" />
+            </svg>
           </div>
 
-          <div className="min-h-[430px] p-5 md:p-8">
-            <div className="flex items-start gap-4">
-              <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-[#efeaff] text-[#7b39fc]"><Sparkles size={17}/></div>
-              <div className="max-w-[560px] rounded-[1.4rem] bg-[#f6f6f4] p-5 text-[16px] leading-relaxed text-black/82">
-                Hi, I’m Elara, your financial copilot. I’ve analysed your portfolio. What would you like to know?
+          <div className="space-y-3">
+            {item.bars.slice(0, 3).map(([label, value]) => (
+              <div key={label} className="rounded-2xl bg-[#1f1f1f] p-3">
+                <div className="flex justify-between text-[11px]">
+                  <span className="font-semibold text-white/40">
+                    {label}
+                  </span>
+
+                  <span className="font-bold text-white">
+                    {value}%
+                  </span>
+                </div>
+
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full rounded-full bg-[#c6ff6e]"
+                    style={{ width: `${value}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    if (item.chartType === 'pie') {
+      return (
+        <div className="mt-4 grid grid-cols-[.85fr_1.15fr] gap-3">
+          <div className="grid place-items-center rounded-2xl bg-[#1f1f1f] p-4">
+            <div className="relative grid size-28 place-items-center rounded-full bg-[conic-gradient(#c6ff6e_0_61%,#8b5cf6_61%_79%,#ffffff_79%_93%,#3f3f46_93%_100%)]">
+              <div className="grid size-16 place-items-center rounded-full bg-[#1f1f1f]">
+                <p className="text-xl font-bold text-white">
+                  61%
+                </p>
               </div>
             </div>
-
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={active}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: .35, ease: [0.16, 1, 0.3, 1] as const }}
-                className="mt-6 flex items-start gap-4"
-              >
-                <div className="grid size-9 shrink-0 place-items-center rounded-xl bg-black text-white"><LineChart size={17}/></div>
-                <div className="max-w-[620px] rounded-[1.4rem] bg-black p-5 text-[16px] leading-relaxed text-white shadow-soft">
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[.22em] text-white/35">{questions[active].q}</p>
-                  {questions[active].a}
-                </div>
-              </motion.div>
-            </AnimatePresence>
           </div>
 
-          <div className="border-t border-black/10 p-5 md:p-7">
-            <div className="flex flex-wrap gap-3">
-              {questions.map((item, i) => <button
-                key={item.q}
-                onClick={() => setActive(i)}
-                className={`rounded-full border px-5 py-3 text-sm font-semibold transition ${active === i ? 'border-black bg-black text-white' : 'border-black/10 bg-white text-black/60 hover:border-black/30 hover:text-black'}`}
-              >{item.q}</button>)}
-            </div>
-            <div className="mt-6 flex items-center gap-3 rounded-full border border-black/10 bg-white p-2 pl-5 shadow-sm">
-              <span className="flex-1 text-black/35">Ask me anything about your wealth...</span>
-              <button className="grid size-12 place-items-center rounded-full bg-[#7b39fc] text-white transition hover:scale-105"><ArrowRight size={20}/></button>
+          <div className="rounded-2xl bg-[#1f1f1f] p-4">
+            <p className="mb-3 text-[11px] font-semibold text-white/40">
+              Geographic exposure
+            </p>
+
+            <div className="space-y-3">
+              {item.bars.map(([label, value], index) => (
+                <div key={label} className="flex items-center justify-between text-[12px]">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`size-2 rounded-full ${
+                        index === 0
+                          ? 'bg-[#c6ff6e]'
+                          : index === 1
+                            ? 'bg-[#8b5cf6]'
+                            : index === 2
+                              ? 'bg-white'
+                              : 'bg-white/25'
+                      }`}
+                    />
+
+                    <span className="text-white/50">
+                      {label}
+                    </span>
+                  </div>
+
+                  <span className="font-bold text-white">
+                    {value}%
+                  </span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
-      </motion.div>
-    </div>
-  </section>
+      );
+    }
+
+    if (item.chartType === 'tax') {
+      return (
+        <div className="mt-4 rounded-2xl bg-[#1f1f1f] p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="text-[11px] font-semibold text-white/40">
+              Tax efficiency mix
+            </p>
+
+            <p className="text-[11px] font-bold text-[#c6ff6e]">
+              +0.8% potential
+            </p>
+          </div>
+
+          <div className="flex h-28 items-end gap-3">
+            {item.bars.map(([label, value]) => (
+              <div key={label} className="flex flex-1 flex-col items-center gap-2">
+                <div className="flex h-20 w-full items-end rounded-xl bg-white/5 px-1.5">
+                  <div
+                    className="w-full rounded-lg bg-[#c6ff6e]"
+                    style={{ height: `${Math.max(value, 10)}%` }}
+                  />
+                </div>
+
+                <span className="text-[9px] font-medium text-white/35">
+                  {label.split(' ')[0]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="mt-4 rounded-2xl bg-[#1f1f1f] p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-[11px] font-semibold text-white/40">
+            Liquidity allocation
+          </p>
+
+          <p className="text-[11px] font-bold text-[#c6ff6e]">
+            €18.4K
+          </p>
+        </div>
+
+        <div className="flex h-5 overflow-hidden rounded-full bg-white/10">
+          <div className="h-full bg-[#c6ff6e]" style={{ width: '62%' }} />
+          <div className="h-full bg-[#8b5cf6]" style={{ width: '24%' }} />
+          <div className="h-full bg-white/35" style={{ width: '14%' }} />
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-2">
+          {item.bars.map(([label, value], index) => (
+            <div key={label} className="rounded-xl bg-white/5 p-3">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className={`size-2 rounded-full ${
+                    index === 0
+                      ? 'bg-[#c6ff6e]'
+                      : index === 1
+                        ? 'bg-[#8b5cf6]'
+                        : 'bg-white/35'
+                  }`}
+                />
+
+                <p className="text-[9px] text-white/35">
+                  {label}
+                </p>
+              </div>
+
+              <p className="mt-1 text-lg font-bold text-white">
+                {value}%
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <section id="product" className="bg-white px-3 pb-24">
+      <div className="grid overflow-hidden rounded-[2rem] bg-[#f4f3ef] md:h-[760px] md:grid-cols-[0.95fr_1.05fr]">
+        <div className="relative h-[620px] overflow-hidden bg-black p-6 md:h-full md:p-10">
+          <video
+            src={cinematicVideo}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute inset-0 h-full w-full object-cover opacity-55"
+          />
+
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_45%_25%,rgba(123,57,252,.45),transparent_34%),linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.86))]" />
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: .8, ease: [0.16, 1, 0.3, 1] as const }}
+            className="relative z-10 flex h-full flex-col justify-start text-white"
+          >
+            <p className="w-max rounded-full bg-white/12 px-4 py-2 text-xs font-semibold backdrop-blur-xl">
+              Interactive demo
+            </p>
+
+            <h2 className="mt-7 max-w-xl text-5xl font-semibold leading-[.9] tracking-[-.075em] md:text-7xl">
+              Talk to your financial copilot
+            </h2>
+
+            <p className="mt-6 max-w-md text-xl leading-tight text-white/65">
+              Ask Elara about risk, allocation, liquidity and portfolio actions using your connected wealth data.
+            </p>
+          </motion.div>
+        </div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={reveal}
+          className="flex min-h-0 items-center p-5 md:p-8"
+        >
+          <div className="flex h-[700px] w-full flex-col overflow-hidden rounded-[2rem] border border-black/10 bg-white shadow-soft">
+            <div className="flex items-center justify-between border-b border-black/10 p-5 md:p-6">
+              <div className="flex items-center gap-3">
+                <ElaraAvatar />
+
+                <div>
+                  <p className="font-bold">
+                    Elara AI
+                  </p>
+
+                  <p className="flex items-center gap-2 text-sm text-black/45">
+                    <span className="size-2 rounded-full bg-emerald-400" />
+                    Active copilot
+                  </p>
+                </div>
+              </div>
+
+              <span className="rounded-full bg-black px-4 py-2 text-xs font-semibold text-white">
+                Live analysis
+              </span>
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto p-5 md:p-6">
+              <div className="flex items-start gap-4">
+                <ElaraAvatar />
+
+                <div className="max-w-[560px] rounded-[1.4rem] bg-black p-5 text-[16px] leading-relaxed text-white">
+                  Hi, I’m Elara, your financial copilot. I’ve analysed your portfolio. What would you like to know?
+                </div>
+              </div>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={`user-${active}`}
+                  initial={{ opacity: 0, y: 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: .28, ease: [0.16, 1, 0.3, 1] as const }}
+                  className="mt-5 flex items-start justify-end gap-4"
+                >
+                  <div className="max-w-[560px] rounded-[1.4rem] bg-[#f6f6f4] p-4 text-[15px] font-medium leading-relaxed text-black/72 shadow-soft">
+                    {activeQuestion.q}
+                  </div>
+
+                  <UserAvatar />
+                </motion.div>
+              </AnimatePresence>
+
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={thinking ? `thinking-${active}` : `answer-${active}`}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  transition={{ duration: .35, ease: [0.16, 1, 0.3, 1] as const }}
+                  className="mt-5 flex items-start gap-4"
+                >
+                  <ElaraAvatar />
+
+                  {thinking ? (
+                    <div className="flex h-12 items-center gap-1.5">
+                      <span className="size-2 animate-bounce rounded-full bg-black/35 [animation-delay:-0.3s]" />
+                      <span className="size-2 animate-bounce rounded-full bg-black/35 [animation-delay:-0.15s]" />
+                      <span className="size-2 animate-bounce rounded-full bg-black/35" />
+                    </div>
+                  ) : (
+                    <div className="w-full max-w-[680px] rounded-[1.4rem] bg-black p-4 text-[15px] leading-relaxed text-white">
+                      <p className="text-xs font-semibold uppercase tracking-[.22em] text-white/35">
+                        Quant insight
+                      </p>
+
+                      <h3 className="mt-2 text-xl font-semibold leading-tight tracking-[-.05em] text-white">
+                        {activeQuestion.title}
+                      </h3>
+
+                      <p className="mt-2 text-[14px] leading-relaxed text-white/60">
+                        {activeQuestion.summary}
+                      </p>
+
+                      <div className="mt-4 grid grid-cols-3 gap-2">
+                        {activeQuestion.metrics.map(([label, value]) => (
+                          <div
+                            key={label}
+                            className="rounded-2xl bg-[#1f1f1f] p-3"
+                          >
+                            <p className="text-[10px] font-medium text-white/35">
+                              {label}
+                            </p>
+
+                            <p className="mt-1 text-lg font-bold tracking-[-.045em] text-white">
+                              {value}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+
+                      <MiniInsightChart item={activeQuestion} />
+                    </div>
+                  )}
+                </motion.div>
+              </AnimatePresence>
+            </div>
+
+            <div className="border-t border-black/10 p-3 md:p-3">
+              <div className="mx-auto grid max-w-[620px] grid-cols-2 gap-2">
+                {questions.map((item, i) => (
+                  <button
+                    key={item.q}
+                    onClick={() => handleQuestionClick(i)}
+                    className="mx-auto w-full max-w-[285px] rounded-[999px] border border-black/10 bg-white px-4 py-2 text-[12px] font-semibold leading-tight text-black/55 transition-colors duration-200 ease-out hover:border-black hover:bg-black hover:text-white"
+                  >
+                    {item.q}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mx-auto mt-3 flex max-w-[620px] items-center gap-2 rounded-[999px] border border-black/10 bg-white p-1 pl-4 shadow-sm">
+                <span className="flex-1 text-[13px] text-black/35">
+                  Ask me anything about your wealth...
+                </span>
+
+                <button className="grid size-9 place-items-center rounded-full bg-[#7b39fc] text-white transition-transform duration-200 ease-out hover:scale-105">
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </section>
+  );
 }
 
 function FeatureTable() {
@@ -499,21 +1034,24 @@ function FinalCard() {
       <div><p className="mb-5 text-black/35">Product</p>{['How it works','Portfolio overview','Optimization','AI companion','Pricing'].map(x=><a className="mb-4 block" key={x}>{x}</a>)}</div>
       <div><p className="mb-5 text-black/35">Technology</p>{['Mean-Variance','Black-Litterman','Risk Parity','Security','GDPR'].map(x=><a className="mb-4 block" key={x}>{x}</a>)}</div>
       <div><p className="mb-5 text-black/35">Company</p>{['Team','Blog','Careers','Contact','Beta access'].map(x=><a className="mb-4 block" key={x}>{x}</a>)}</div>
-      <div className="border-t border-black/10 pt-8 text-sm text-black/35 md:col-span-4">© 2026 Elara. All rights reserved. No support bot included.</div>
+      <div className="border-t border-black/10 pt-8 text-sm text-black/35 md:col-span-4">© 2026 Elara Technologies. All rights reserved. No support bot included.</div>
     </div>
   </section>
 }
 
 function App() {
-  return <main>
-    <Hero />
-    <Trust />
-    <HowItWorks />
-    <CopilotSection />
-    <FeatureTable />
-    <Pricing />
-    <FinalCard />
-  </main>
+  return (
+    <main>
+      <Hero />
+      <InstitutionStrip />
+      <HowItWorks />
+      <CopilotSection />
+      <FeatureTable />
+      <Trust />
+      <Pricing />
+      <FinalCard />
+    </main>
+  );
 }
 
 export default App;
