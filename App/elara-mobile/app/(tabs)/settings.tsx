@@ -1,11 +1,22 @@
 import { useAppSession } from "../../lib/app-session-store";
 import { usePortfolio } from "../../lib/portfolio-store";
+import { supabase } from "../../lib/supabase";
 import { router } from "expo-router";
-import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 export default function SettingsScreen() {
   const { resetPortfolio } = usePortfolio();
   const { resetSetup } = useAppSession();
+
+  const [isTestingSupabase, setIsTestingSupabase] = useState(false);
 
   function handleResetLocalData() {
     Alert.alert(
@@ -28,6 +39,42 @@ export default function SettingsScreen() {
       ]
     );
   }
+
+async function handleTestSupabaseConnection() {
+  try {
+    setIsTestingSupabase(true);
+
+    const { error } = await supabase.from("assets").select("id").limit(1);
+
+    if (error) {
+      if (
+        error.message.toLowerCase().includes("permission denied") ||
+        error.message.toLowerCase().includes("row-level security")
+      ) {
+        Alert.alert(
+          "Supabase reachable",
+          "The app can reach Supabase. The assets table is protected because Supabase Auth is not connected yet."
+        );
+        return;
+      }
+
+      Alert.alert("Supabase error", error.message);
+      return;
+    }
+
+    Alert.alert(
+      "Supabase connected",
+      "The mobile app can reach your Supabase project and query the assets table."
+    );
+  } catch (error) {
+    Alert.alert(
+      "Connection failed",
+      error instanceof Error ? error.message : "Unknown error"
+    );
+  } finally {
+    setIsTestingSupabase(false);
+  }
+}
 
   return (
     <ScrollView
@@ -53,6 +100,48 @@ export default function SettingsScreen() {
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Supabase</Text>
+          <Text style={styles.cardSubtitle}>
+            The app now has a Supabase client configured through local
+            environment variables.
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <View style={styles.rowIcon}>
+            <Text style={styles.rowIconText}>SB</Text>
+          </View>
+
+          <View style={styles.rowContent}>
+            <Text style={styles.rowTitle}>Database connection</Text>
+            <Text style={styles.rowDescription}>
+              Test whether Expo can reach the Supabase project and read the
+              assets table.
+            </Text>
+          </View>
+        </View>
+
+        <Pressable
+          style={[
+            styles.secondaryButton,
+            isTestingSupabase && styles.secondaryButtonDisabled,
+          ]}
+          onPress={handleTestSupabaseConnection}
+          disabled={isTestingSupabase}
+        >
+          <Text
+            style={[
+              styles.secondaryButtonText,
+              isTestingSupabase && styles.secondaryButtonTextDisabled,
+            ]}
+          >
+            {isTestingSupabase ? "Testing..." : "Test Supabase connection"}
+          </Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Local portfolio</Text>
           <Text style={styles.cardSubtitle}>
             Assets are currently saved with AsyncStorage on this device.
@@ -67,7 +156,8 @@ export default function SettingsScreen() {
           <View style={styles.rowContent}>
             <Text style={styles.rowTitle}>AsyncStorage active</Text>
             <Text style={styles.rowDescription}>
-              Manual assets remain available after closing and reopening Expo Go.
+              Manual assets remain available after closing and reopening Expo
+              Go.
             </Text>
           </View>
         </View>
@@ -251,6 +341,30 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     fontWeight: "600",
     letterSpacing: -0.1,
+  },
+
+  secondaryButton: {
+    marginTop: 20,
+    height: 54,
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  secondaryButtonDisabled: {
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+
+  secondaryButtonText: {
+    color: "#050505",
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: -0.3,
+  },
+
+  secondaryButtonTextDisabled: {
+    color: "rgba(255,255,255,0.36)",
   },
 
   dangerCard: {
