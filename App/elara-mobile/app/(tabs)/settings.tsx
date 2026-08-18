@@ -1,6 +1,4 @@
-import { useAppSession } from "../../lib/app-session-store";
-import { usePortfolio } from "../../lib/portfolio-store";
-import { supabase } from "../../lib/supabase";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useState } from "react";
 import {
@@ -12,16 +10,29 @@ import {
   View,
 } from "react-native";
 
+import { useAppSession } from "../../lib/app-session-store";
+import { useAuth } from "../../lib/auth-store";
+import { usePortfolio } from "../../lib/portfolio-store";
+import { supabase } from "../../lib/supabase";
+
 export default function SettingsScreen() {
   const { resetPortfolio } = usePortfolio();
   const { resetSetup } = useAppSession();
+  const { user, isAuthLoading, signOut } = useAuth();
 
   const [isTestingSupabase, setIsTestingSupabase] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const userEmail = user?.email ?? "Unknown email";
+
+  function handleOpenAuthScreen() {
+    router.push("/create-account" as any);
+  }
 
   function handleResetLocalData() {
     Alert.alert(
       "Reset local data",
-      "This will delete the local portfolio and restart the onboarding flow. Use it only for testing.",
+      "This will delete the local portfolio, reset onboarding, sign out from Supabase, and restart the app flow.",
       [
         {
           text: "Cancel",
@@ -31,50 +42,94 @@ export default function SettingsScreen() {
           text: "Reset",
           style: "destructive",
           onPress: async () => {
-            await resetPortfolio();
-            await resetSetup();
-            router.replace("/" as any);
+            try {
+              await resetPortfolio();
+              await resetSetup();
+
+              if (user) {
+                await signOut();
+              }
+
+              await AsyncStorage.multiRemove([
+                "elara_portfolio_assets_v1",
+                "elara_has_completed_setup_v1",
+              ]);
+
+              router.replace("/" as any);
+            } catch (error) {
+              Alert.alert(
+                "Reset failed",
+                error instanceof Error ? error.message : "Unknown error"
+              );
+            }
           },
         },
       ]
     );
   }
 
-async function handleTestSupabaseConnection() {
-  try {
-    setIsTestingSupabase(true);
+  function handleSignOut() {
+    Alert.alert("Sign out", "Do you want to sign out from this device?", [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Sign out",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setIsSigningOut(true);
+            await signOut();
+            router.replace("/create-account" as any);
+          } catch (error) {
+            Alert.alert(
+              "Sign out failed",
+              error instanceof Error ? error.message : "Unknown error"
+            );
+          } finally {
+            setIsSigningOut(false);
+          }
+        },
+      },
+    ]);
+  }
 
-    const { error } = await supabase.from("assets").select("id").limit(1);
+  async function handleTestSupabaseConnection() {
+    try {
+      setIsTestingSupabase(true);
 
-    if (error) {
-      if (
-        error.message.toLowerCase().includes("permission denied") ||
-        error.message.toLowerCase().includes("row-level security")
-      ) {
-        Alert.alert(
-          "Supabase reachable",
-          "The app can reach Supabase. The assets table is protected because Supabase Auth is not connected yet."
-        );
+      const { error } = await supabase.from("assets").select("id").limit(1);
+
+      if (error) {
+        if (
+          error.message.toLowerCase().includes("permission denied") ||
+          error.message.toLowerCase().includes("row-level security")
+        ) {
+          Alert.alert(
+            "Supabase reachable",
+            "The app can reach Supabase. The assets table is protected by database policies."
+          );
+          return;
+        }
+
+        Alert.alert("Supabase error", error.message);
         return;
       }
 
-      Alert.alert("Supabase error", error.message);
-      return;
+      Alert.alert(
+        "Supabase connected",
+        "The mobile app can reach your Supabase project and query the assets table."
+      );
+    } catch (error) {
+      Alert.alert(
+        "Connection failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    } finally {
+      setIsTestingSupabase(false);
     }
-
-    Alert.alert(
-      "Supabase connected",
-      "The mobile app can reach your Supabase project and query the assets table."
-    );
-  } catch (error) {
-    Alert.alert(
-      "Connection failed",
-      error instanceof Error ? error.message : "Unknown error"
-    );
-  } finally {
-    setIsTestingSupabase(false);
   }
-}
 
   return (
     <ScrollView
@@ -93,17 +148,74 @@ async function handleTestSupabaseConnection() {
         <Text style={styles.kicker}>Local development</Text>
         <Text style={styles.title}>Settings</Text>
         <Text style={styles.subtitle}>
-          Manage local app state while building the MVP. These controls are only
-          for development and testing before Supabase Auth.
+          Manage account, Supabase connection, and local app state while
+          building the MVP.
         </Text>
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Account</Text>
+          <Text style={styles.cardSubtitle}>
+            Supabase Auth is now the identity layer for the Elara mobile app.
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <View style={styles.rowIcon}>
+            <Text style={styles.rowIconText}>{user ? "✓" : "!"}</Text>
+          </View>
+
+          <View style={styles.rowContent}>
+            <Text style={styles.rowTitle}>
+              {isAuthLoading
+                ? "Checking session..."
+                : user
+                  ? "Signed in"
+                  : "Not signed in"}
+            </Text>
+
+            <Text style={styles.rowDescription}>
+              {user
+                ? userEmail
+                : "Sign in or create an account before syncing portfolio data."}
+            </Text>
+          </View>
+        </View>
+
+        {user ? (
+          <Pressable
+            style={[
+              styles.outlineButton,
+              isSigningOut && styles.outlineButtonDisabled,
+            ]}
+            onPress={handleSignOut}
+            disabled={isSigningOut}
+          >
+            <Text
+              style={[
+                styles.outlineButtonText,
+                isSigningOut && styles.outlineButtonTextDisabled,
+              ]}
+            >
+              {isSigningOut ? "Signing out..." : "Sign out"}
+            </Text>
+          </Pressable>
+        ) : (
+          <Pressable style={styles.secondaryButton} onPress={handleOpenAuthScreen}>
+            <Text style={styles.secondaryButtonText}>
+              Sign in / Create account
+            </Text>
+          </Pressable>
+        )}
       </View>
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Supabase</Text>
           <Text style={styles.cardSubtitle}>
-            The app now has a Supabase client configured through local
-            environment variables.
+            The app has a Supabase client configured through local environment
+            variables.
           </Text>
         </View>
 
@@ -179,7 +291,8 @@ async function handleTestSupabaseConnection() {
           <View style={styles.rowContent}>
             <Text style={styles.rowTitle}>Auto-open Wealth</Text>
             <Text style={styles.rowDescription}>
-              After setup, the app opens directly on the Wealth dashboard.
+              After setup and authentication, the app opens directly on the
+              Wealth dashboard.
             </Text>
           </View>
         </View>
@@ -189,8 +302,8 @@ async function handleTestSupabaseConnection() {
         <Text style={styles.dangerKicker}>Testing control</Text>
         <Text style={styles.dangerTitle}>Reset local data</Text>
         <Text style={styles.dangerText}>
-          Deletes local assets and resets the setup flag. The next app launch
-          will start from the Welcome screen again.
+          Deletes local assets, resets the setup flag, signs out from Supabase,
+          and restarts the app flow.
         </Text>
 
         <Pressable style={styles.resetButton} onPress={handleResetLocalData}>
@@ -201,8 +314,8 @@ async function handleTestSupabaseConnection() {
       <View style={styles.infoCard}>
         <Text style={styles.infoTitle}>Next backend step</Text>
         <Text style={styles.infoText}>
-          After this local layer works, the same asset model will be persisted on
-          Supabase and exposed through FastAPI endpoints.
+          After Auth works, the same asset model will be persisted on Supabase
+          with user-level privacy through database policies.
         </Text>
       </View>
     </ScrollView>
@@ -365,6 +478,32 @@ const styles = StyleSheet.create({
 
   secondaryButtonTextDisabled: {
     color: "rgba(255,255,255,0.36)",
+  },
+
+  outlineButton: {
+    marginTop: 20,
+    height: 54,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  outlineButtonDisabled: {
+    opacity: 0.55,
+  },
+
+  outlineButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: -0.3,
+  },
+
+  outlineButtonTextDisabled: {
+    color: "rgba(255,255,255,0.42)",
   },
 
   dangerCard: {

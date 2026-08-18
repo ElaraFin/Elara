@@ -9,13 +9,17 @@ import { router } from "expo-router";
 import { VideoView, useVideoPlayer } from "expo-video";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+
 import { useAppSession } from "../lib/app-session-store";
+import { useAuth } from "../lib/auth-store";
 
 const heroVideo =
   "https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260328_105406_16f4600d-7a92-4292-b96e-b19156c7830a.mp4";
 
 export default function WelcomeScreen() {
   const { hasLoadedSession, hasCompletedSetup } = useAppSession();
+  const { isAuthLoading, user } = useAuth();
+
   const [fontsLoaded] = useFonts({
     Inter_500Medium,
     Inter_600SemiBold,
@@ -36,10 +40,19 @@ export default function WelcomeScreen() {
   }, [player]);
 
   useEffect(() => {
-    if (hasLoadedSession && hasCompletedSetup) {
-      router.replace("/(tabs)/wealth" as any);
+    if (!hasLoadedSession || isAuthLoading) {
+      return;
     }
-  }, [hasLoadedSession, hasCompletedSetup]);
+
+    if (hasCompletedSetup && user) {
+      router.replace("/(tabs)/wealth" as any);
+      return;
+    }
+
+    if (hasCompletedSetup && !user) {
+      router.replace("/create-account" as any);
+    }
+  }, [hasLoadedSession, hasCompletedSetup, isAuthLoading, user]);
 
   if (!fontsLoaded) {
     return <View style={styles.screen} />;
@@ -86,7 +99,7 @@ export default function WelcomeScreen() {
 
         <Pressable
           style={styles.primaryButton}
-          onPress={() => router.push("/onboarding")}
+          onPress={() => router.push("/onboarding" as any)}
         >
           <Text style={styles.primaryButtonText}>Start setup</Text>
           <Text style={styles.primaryArrow}>→</Text>
