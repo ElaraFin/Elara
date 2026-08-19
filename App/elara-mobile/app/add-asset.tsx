@@ -2,6 +2,8 @@ import { AssetType, Currency, usePortfolio } from "../lib/portfolio-store";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -45,6 +47,7 @@ export default function AddAssetScreen() {
   const [quantity, setQuantity] = useState("");
   const [currency, setCurrency] = useState<Currency>("EUR");
   const [provider, setProvider] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const parsedCurrentValue = useMemo(
     () => parseNumber(currentValue),
@@ -53,24 +56,36 @@ export default function AddAssetScreen() {
 
   const canSave = name.trim().length > 0 && parsedCurrentValue > 0;
 
-  function handleSave() {
-    if (!canSave) {
+  async function handleSave() {
+    if (!canSave || isSaving) {
       return;
     }
 
-    const parsedQuantity = quantity.trim().length > 0 ? parseNumber(quantity) : undefined;
+    const parsedQuantity =
+      quantity.trim().length > 0 ? parseNumber(quantity) : undefined;
 
-    addAsset({
-      name: name.trim(),
-      asset_type: assetType,
-      quantity: parsedQuantity,
-      current_value: parsedCurrentValue,
-      currency,
-      source: "manual",
-      provider: provider.trim().length > 0 ? provider.trim() : "Manual input",
-    });
+    try {
+      setIsSaving(true);
 
-    router.replace("/(tabs)/wealth");
+      await addAsset({
+        name: name.trim(),
+        asset_type: assetType,
+        quantity: parsedQuantity,
+        current_value: parsedCurrentValue,
+        currency,
+        source: "manual",
+        provider: provider.trim().length > 0 ? provider.trim() : "Manual input",
+      });
+
+      router.replace("/(tabs)/wealth" as any);
+    } catch (error) {
+      Alert.alert(
+        "Save failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -219,17 +234,25 @@ export default function AddAssetScreen() {
         </View>
 
         <Pressable
-          style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
+          style={[
+            styles.saveButton,
+            (!canSave || isSaving) && styles.saveButtonDisabled,
+          ]}
           onPress={handleSave}
+          disabled={!canSave || isSaving}
         >
-          <Text
-            style={[
-              styles.saveButtonText,
-              !canSave && styles.saveButtonTextDisabled,
-            ]}
-          >
-            Save asset
-          </Text>
+          {isSaving ? (
+            <ActivityIndicator color="#050505" />
+          ) : (
+            <Text
+              style={[
+                styles.saveButtonText,
+                !canSave && styles.saveButtonTextDisabled,
+              ]}
+            >
+              Save asset
+            </Text>
+          )}
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

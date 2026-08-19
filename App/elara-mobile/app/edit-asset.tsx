@@ -2,6 +2,8 @@ import { AssetType, Currency, usePortfolio } from "../lib/portfolio-store";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -52,6 +54,7 @@ export default function EditAssetScreen() {
   const [quantity, setQuantity] = useState("");
   const [currency, setCurrency] = useState<Currency>("EUR");
   const [provider, setProvider] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (!asset) {
@@ -70,26 +73,38 @@ export default function EditAssetScreen() {
     return parseNumber(currentValue);
   }, [currentValue]);
 
-  const canSave = Boolean(asset) && name.trim().length > 0 && parsedCurrentValue > 0;
+  const canSave =
+    Boolean(asset) && name.trim().length > 0 && parsedCurrentValue > 0;
 
-  function handleSave() {
-    if (!asset || !canSave) {
+  async function handleSave() {
+    if (!asset || !canSave || isSaving) {
       return;
     }
 
     const parsedQuantity =
       quantity.trim().length > 0 ? parseNumber(quantity) : undefined;
 
-    updateAsset(asset.id, {
-      name: name.trim(),
-      asset_type: assetType,
-      current_value: parsedCurrentValue,
-      quantity: parsedQuantity,
-      currency,
-      provider: provider.trim().length > 0 ? provider.trim() : "Manual input",
-    });
+    try {
+      setIsSaving(true);
 
-    router.replace("/(tabs)/wealth" as any);
+      await updateAsset(asset.id, {
+        name: name.trim(),
+        asset_type: assetType,
+        current_value: parsedCurrentValue,
+        quantity: parsedQuantity,
+        currency,
+        provider: provider.trim().length > 0 ? provider.trim() : "Manual input",
+      });
+
+      router.replace("/(tabs)/wealth" as any);
+    } catch (error) {
+      Alert.alert(
+        "Update failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   if (!asset) {
@@ -97,7 +112,7 @@ export default function EditAssetScreen() {
       <View style={styles.notFoundScreen}>
         <Text style={styles.notFoundTitle}>Asset not found</Text>
         <Text style={styles.notFoundText}>
-          This asset may have been deleted or is no longer available locally.
+          This asset may have been deleted or is no longer available.
         </Text>
 
         <Pressable
@@ -250,23 +265,31 @@ export default function EditAssetScreen() {
         <View style={styles.infoCard}>
           <Text style={styles.infoTitle}>Portfolio integration</Text>
           <Text style={styles.infoText}>
-            Editing this asset updates the same local normalized data structure
-            that will later be persisted on Supabase through FastAPI.
+            Editing this asset updates the normalized portfolio data persisted
+            for the authenticated user.
           </Text>
         </View>
 
         <Pressable
-          style={[styles.saveButton, !canSave && styles.saveButtonDisabled]}
+          style={[
+            styles.saveButton,
+            (!canSave || isSaving) && styles.saveButtonDisabled,
+          ]}
           onPress={handleSave}
+          disabled={!canSave || isSaving}
         >
-          <Text
-            style={[
-              styles.saveButtonText,
-              !canSave && styles.saveButtonTextDisabled,
-            ]}
-          >
-            Save changes
-          </Text>
+          {isSaving ? (
+            <ActivityIndicator color="#050505" />
+          ) : (
+            <Text
+              style={[
+                styles.saveButtonText,
+                !canSave && styles.saveButtonTextDisabled,
+              ]}
+            >
+              Save changes
+            </Text>
+          )}
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
