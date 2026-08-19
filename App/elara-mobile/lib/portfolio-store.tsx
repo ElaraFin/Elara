@@ -8,6 +8,14 @@ import {
   useState,
 } from "react";
 
+import { useAuth } from "./auth-store";
+import {
+  createSupabaseAsset,
+  deleteSupabaseAsset,
+  fetchSupabaseAssets,
+  updateSupabaseAsset,
+} from "./supabase-assets";
+
 export type AssetType =
   | "cash"
   | "etf"
@@ -44,13 +52,18 @@ export type UpdateAssetInput = {
   provider?: string;
 };
 
+type NewAssetInput = Omit<ElaraAsset, "id" | "created_at" | "updated_at">;
+
 type PortfolioContextValue = {
   assets: ElaraAsset[];
   totalNetWorth: number;
-  addAsset: (asset: Omit<ElaraAsset, "id" | "created_at" | "updated_at">) => void;
-  updateAsset: (assetId: string, updates: UpdateAssetInput) => void;
-  deleteAsset: (assetId: string) => void;
-  resetPortfolio: () => void;
+  isPortfolioLoading: boolean;
+  portfolioError: string | null;
+  addAsset: (asset: NewAssetInput) => Promise<void>;
+  updateAsset: (assetId: string, updates: UpdateAssetInput) => Promise<void>;
+  deleteAsset: (assetId: string) => Promise<void>;
+  resetPortfolio: () => Promise<void>;
+  reloadPortfolio: () => Promise<void>;
 };
 
 const STORAGE_KEY = "elara_portfolio_assets_v1";
@@ -59,109 +72,211 @@ const initialAssets: ElaraAsset[] = [];
 
 const PortfolioContext = createContext<PortfolioContextValue | null>(null);
 
+function createLocalAsset(asset: NewAssetInput): ElaraAsset {
+  const now = new Date().toISOString();
+
+  return {
+    ...asset,
+    id: `asset_${Date.now()}`,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
 export function PortfolioProvider({ children }: { children: ReactNode }) {
+  const { user, isAuthLoading } = useAuth();
+
   const [assets, setAssets] = useState<ElaraAsset[]>([]);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [portfolioError, setPortfolioError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function loadAssets() {
-      try {
-        const storedAssets = await AsyncStorage.getItem(STORAGE_KEY);
+  async function loadLocalAssets() {
+    const storedAssets = await AsyncStorage.getItem(STORAGE_KEY);
 
-        if (storedAssets) {
-          setAssets(JSON.parse(storedAssets));
-        } else {
-          setAssets(initialAssets);
-        }
-      } catch (error) {
-        console.log("Failed to load portfolio assets", error);
-        setAssets(initialAssets);
-      } finally {
-        setHasLoaded(true);
-      }
+    if (storedAssets) {
+      setAssets(JSON.parse(storedAssets));
+      return;
     }
 
-    loadAssets();
-  }, []);
+    setAssets(initialAssets);
+  }
+
+  async function loadPortfolio() {
+    if (isAuthLoading) {
+      return;
+    }
+
+    try {
+      setHasLoaded(false);
+      setPortfolioError(null);
+
+      if (user) {
+        const remoteAssets = await fetchSupabaseAssets(user);
+        setAssets(remoteAssets);
+        return;
+      }
+
+      await loadLocalAssets();
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to load portfolio";
+
+      console.log("Failed to load portfolio assets", error);
+      setPortfolioError(message);
+
+      if (!user) {
+        setAssets(initialAssets);
+      }
+    } finally {
+      setHasLoaded(true);
+    }
+  }
 
   useEffect(() => {
-    async function saveAssets() {
-      if (!hasLoaded) {
+    loadPortfolio();
+  }, [user?.id, isAuthLoading]);
+
+  useEffect(() => {
+    async function saveLocalAssets() {
+      if (!hasLoaded || user) {
         return;
       }
 
       try {
         await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(assets));
       } catch (error) {
-        console.log("Failed to save portfolio assets", error);
+        console.log("Failed to save local portfolio assets", error);
       }
     }
 
-    saveAssets();
-  }, [assets, hasLoaded]);
+    saveLocalAssets();
+  }, [assets, hasLoaded, user]);
 
   const totalNetWorth = useMemo(() => {
     return assets.reduce((sum, asset) => sum + asset.current_value, 0);
   }, [assets]);
 
-  function addAsset(
-    asset: Omit<ElaraAsset, "id" | "created_at" | "updated_at">
-  ) {
-    const now = new Date().toISOString();
+  async function addAsset(asset: NewAssetInput) {
+    try {
+      setPortfolioError(null);
 
-    const newAsset: ElaraAsset = {
-      ...asset,
-      id: `asset_${Date.now()}`,
-      created_at: now,
-      updated_at: now,
-    };
+      if (user) {
+        const createdAsset = await createSupabaseAsset(user, asset);
+        setAssets((currentAssets) => [createdAsset, ...currentAssets]);
+        return;
+      }
 
-    setAssets((currentAssets) => [newAsset, ...currentAssets]);
+      const localAsset = createLocalAsset(asset);
+      setAssets((currentAssets) => [localAsset, ...currentAssets]);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to add asset";
+
+      console.log("Failed to add asset", error);
+      setPortfolioError(message);
+      throw new Error(message);
+    }
   }
 
-  function updateAsset(assetId: string, updates: UpdateAssetInput) {
-    const now = new Date().toISOString();
+  async function updateAsset(assetId: string, updates: UpdateAssetInput) {
+    try {
+      setPortfolioError(null);
 
-    setAssets((currentAssets) =>
-      currentAssets.map((asset) => {
-        if (asset.id !== assetId) {
-          return asset;
-        }
+      if (user) {
+        const updatedAsset = await updateSupabaseAsset(user, assetId, updates);
 
-        return {
-          ...asset,
-          ...updates,
-          updated_at: now,
-        };
-      })
-    );
+        setAssets((currentAssets) =>
+          currentAssets.map((asset) => {
+            if (asset.id !== assetId) {
+              return asset;
+            }
+
+            return updatedAsset;
+          })
+        );
+
+        return;
+      }
+
+      const now = new Date().toISOString();
+
+      setAssets((currentAssets) =>
+        currentAssets.map((asset) => {
+          if (asset.id !== assetId) {
+            return asset;
+          }
+
+          return {
+            ...asset,
+            ...updates,
+            updated_at: now,
+          };
+        })
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to update asset";
+
+      console.log("Failed to update asset", error);
+      setPortfolioError(message);
+      throw new Error(message);
+    }
   }
 
-  function deleteAsset(assetId: string) {
-    setAssets((currentAssets) =>
-      currentAssets.filter((asset) => asset.id !== assetId)
-    );
+  async function deleteAsset(assetId: string) {
+    try {
+      setPortfolioError(null);
+
+      if (user) {
+        await deleteSupabaseAsset(user, assetId);
+      }
+
+      setAssets((currentAssets) =>
+        currentAssets.filter((asset) => asset.id !== assetId)
+      );
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to delete asset";
+
+      console.log("Failed to delete asset", error);
+      setPortfolioError(message);
+      throw new Error(message);
+    }
   }
 
   async function resetPortfolio() {
     try {
+      setPortfolioError(null);
+
       setAssets([]);
       await AsyncStorage.removeItem(STORAGE_KEY);
     } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to reset portfolio";
+
       console.log("Failed to reset portfolio assets", error);
+      setPortfolioError(message);
+      throw new Error(message);
     }
+  }
+
+  async function reloadPortfolio() {
+    await loadPortfolio();
   }
 
   const value = useMemo(
     () => ({
       assets,
       totalNetWorth,
+      isPortfolioLoading: !hasLoaded,
+      portfolioError,
       addAsset,
       updateAsset,
       deleteAsset,
       resetPortfolio,
+      reloadPortfolio,
     }),
-    [assets, totalNetWorth]
+    [assets, totalNetWorth, hasLoaded, portfolioError, user]
   );
 
   return (
