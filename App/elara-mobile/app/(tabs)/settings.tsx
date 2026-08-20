@@ -14,6 +14,7 @@ import { useAppSession } from "../../lib/app-session-store";
 import { useAuth } from "../../lib/auth-store";
 import { usePortfolio } from "../../lib/portfolio-store";
 import { supabase } from "../../lib/supabase";
+import { prepareMockWealthPortfolioSync } from "../../lib/wealth-api/wealth-sync";
 
 export default function SettingsScreen() {
   const { resetPortfolio } = usePortfolio();
@@ -22,6 +23,7 @@ export default function SettingsScreen() {
 
   const [isTestingSupabase, setIsTestingSupabase] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isTestingWealthMock, setIsTestingWealthMock] = useState(false);
 
   const userEmail = user?.email ?? "Unknown email";
 
@@ -131,6 +133,29 @@ export default function SettingsScreen() {
     }
   }
 
+  function handleTestWealthMockSync() {
+    try {
+      setIsTestingWealthMock(true);
+
+      const result = prepareMockWealthPortfolioSync("Mock Brokerage");
+      const firstAsset = result.mappedAssets[0];
+
+      Alert.alert(
+        "WealthAPI mock sync ready",
+        `Mapped ${result.mappedAssets.length} assets.\n\nTotal value: €${
+          result.totalMarketValue?.toLocaleString("it-IT") ?? "N/A"
+        }\n\nFirst asset: ${firstAsset?.name ?? "N/A"}`
+      );
+    } catch (error) {
+      Alert.alert(
+        "WealthAPI mock failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    } finally {
+      setIsTestingWealthMock(false);
+    }
+  }
+
   return (
     <ScrollView
       style={styles.screen}
@@ -148,8 +173,8 @@ export default function SettingsScreen() {
         <Text style={styles.kicker}>Local development</Text>
         <Text style={styles.title}>Settings</Text>
         <Text style={styles.subtitle}>
-          Manage account, Supabase connection, and local app state while
-          building the MVP.
+          Manage account, Supabase connection, WealthAPI mapping, and local app
+          state while building the MVP.
         </Text>
       </View>
 
@@ -254,9 +279,52 @@ export default function SettingsScreen() {
 
       <View style={styles.card}>
         <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>WealthAPI</Text>
+          <Text style={styles.cardSubtitle}>
+            Test the WealthAPI mapping layer without calling the real sandbox
+            yet.
+          </Text>
+        </View>
+
+        <View style={styles.row}>
+          <View style={styles.rowIcon}>
+            <Text style={styles.rowIconText}>WA</Text>
+          </View>
+
+          <View style={styles.rowContent}>
+            <Text style={styles.rowTitle}>Mock brokerage sync</Text>
+            <Text style={styles.rowDescription}>
+              Converts mock brokerage holdings into Elara assets using the
+              WealthAPI mapper.
+            </Text>
+          </View>
+        </View>
+
+        <Pressable
+          style={[
+            styles.secondaryButton,
+            isTestingWealthMock && styles.secondaryButtonDisabled,
+          ]}
+          onPress={handleTestWealthMockSync}
+          disabled={isTestingWealthMock}
+        >
+          <Text
+            style={[
+              styles.secondaryButtonText,
+              isTestingWealthMock && styles.secondaryButtonTextDisabled,
+            ]}
+          >
+            {isTestingWealthMock ? "Testing..." : "Test WealthAPI mock sync"}
+          </Text>
+        </Pressable>
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Local portfolio</Text>
           <Text style={styles.cardSubtitle}>
-            Assets are currently saved with AsyncStorage on this device.
+            Assets are now primarily saved on Supabase when the user is signed
+            in.
           </Text>
         </View>
 
@@ -266,10 +334,9 @@ export default function SettingsScreen() {
           </View>
 
           <View style={styles.rowContent}>
-            <Text style={styles.rowTitle}>AsyncStorage active</Text>
+            <Text style={styles.rowTitle}>Portfolio storage</Text>
             <Text style={styles.rowDescription}>
-              Manual assets remain available after closing and reopening Expo
-              Go.
+              Manual assets are persisted in Supabase for authenticated users.
             </Text>
           </View>
         </View>
@@ -312,10 +379,10 @@ export default function SettingsScreen() {
       </View>
 
       <View style={styles.infoCard}>
-        <Text style={styles.infoTitle}>Next backend step</Text>
+        <Text style={styles.infoTitle}>Next integration step</Text>
         <Text style={styles.infoText}>
-          After Auth works, the same asset model will be persisted on Supabase
-          with user-level privacy through database policies.
+          When the WealthAPI sandbox is active, the mock sync will be replaced
+          by the real Brokerage API flow and persisted as source=wealth_api.
         </Text>
       </View>
     </ScrollView>
