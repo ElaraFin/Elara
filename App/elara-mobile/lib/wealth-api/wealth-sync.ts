@@ -1,16 +1,19 @@
+import type { User } from "@supabase/supabase-js";
+
 import type { ElaraAsset } from "../portfolio-store";
+import {
+  replaceSupabaseAssetsBySource,
+  type SupabaseAssetInput,
+} from "../supabase-assets";
 
 import { getAssetMarketValues } from "./wealth-client";
-import { mapWealthAssetsToElaraAssets } from "./wealth-mapper";
+import { mapWealthAssetToElaraAsset } from "./wealth-mapper";
 import type {
   WealthAssetMarketValue,
   WealthAssetsTotalMarketValue,
 } from "./wealth-types";
 
-export type WealthSyncedAsset = Omit<
-  ElaraAsset,
-  "id" | "created_at" | "updated_at"
->;
+export type WealthSyncedAsset = SupabaseAssetInput;
 
 export type WealthSyncResult = {
   provider: string;
@@ -18,6 +21,10 @@ export type WealthSyncResult = {
   totalMarketValue?: number;
   rawAssets: WealthAssetMarketValue[];
   mappedAssets: WealthSyncedAsset[];
+};
+
+export type WealthPersistedSyncResult = WealthSyncResult & {
+  savedAssets: ElaraAsset[];
 };
 
 function parseNumber(value: string | null | undefined): number | undefined {
@@ -44,16 +51,39 @@ function getLatestReport(
   return report;
 }
 
+function buildRawPayload(asset: WealthAssetMarketValue): Record<string, unknown> {
+  return {
+    asset_type: asset.asset_type,
+    isin: asset.isin,
+    emitter: asset.emitter,
+    market_value: asset.market_value,
+    number_of_lots: asset.number_of_lots,
+  };
+}
+
+function mapWealthAssetForSupabase(
+  asset: WealthAssetMarketValue,
+  provider: string
+): WealthSyncedAsset {
+  return {
+    ...mapWealthAssetToElaraAsset(asset, provider),
+    source: "wealth_api",
+    external_id: asset.isin,
+    raw_payload: buildRawPayload(asset),
+  };
+}
+
+function mapWealthAssetsForSupabase(
+  assets: WealthAssetMarketValue[],
+  provider: string
+): WealthSyncedAsset[] {
+  return assets.map((asset) => mapWealthAssetForSupabase(asset, provider));
+}
+
 /**
- * Prima versione del sync WealthAPI.
+ * Prepara un sync WealthAPI reale.
  *
- * Responsabilità:
- * - chiama WealthAPI
- * - prende gli asset dal report
- * - li converte in formato Elara
- *
- * NON salva ancora su Supabase.
- * Il salvataggio sarà collegato dopo, quando avremo sandbox/endpoints verificati.
+ * Per ora è pronto lato codice, ma verrà testato quando avremo sandbox.
  */
 export async function prepareWealthPortfolioSync(
   provider = "wealthAPI"
@@ -61,10 +91,8 @@ export async function prepareWealthPortfolioSync(
   const wealthReport = await getAssetMarketValues();
 
   const latestReport = getLatestReport(wealthReport);
-
   const rawAssets = latestReport.assets ?? [];
-
-  const mappedAssets = mapWealthAssetsToElaraAssets(rawAssets, provider);
+  const mappedAssets = mapWealthAssetsForSupabase(rawAssets, provider);
 
   return {
     provider,
@@ -77,9 +105,6 @@ export async function prepareWealthPortfolioSync(
 
 /**
  * Versione mock utile per testare il mapping senza sandbox.
- *
- * Così possiamo validare la trasformazione WealthAPI → Elara
- * senza chiamare API reali.
  */
 export function prepareMockWealthPortfolioSync(
   provider = "wealthAPI"
@@ -113,10 +138,7 @@ export function prepareMockWealthPortfolioSync(
     ],
   };
 
-  const mappedAssets = mapWealthAssetsToElaraAssets(
-    mockReport.assets,
-    provider
-  );
+  const mappedAssets = mapWealthAssetsForSupabase(mockReport.assets, provider);
 
   return {
     provider,
@@ -124,5 +146,55 @@ export function prepareMockWealthPortfolioSync(
     totalMarketValue: parseNumber(mockReport.total_market_value),
     rawAssets: mockReport.assets,
     mappedAssets,
+  };
+}
+
+/**
+ * Sync reale WealthAPI → Supabase.
+ *
+ * Pronto per sandbox:
+ * - chiama WealthAPI
+ * - mappa gli asset
+ * - sostituisce gli asset source=wealth_api
+ */
+export async function syncWealthPortfolioToSupabase(
+  user: User,
+  provider = "wealthAPI"
+): Promise<WealthPersistedSyncResult> {
+  const result = await prepareWealthPortfolioSync(provider);
+
+  const savedAssets = await replaceSupabaseAssetsBySource(
+    user,
+    "wealth_api",
+    result.mappedAssets
+  );
+
+  return {
+    ...result,
+    savedAssets,
+  };
+}
+
+/**
+ * Sync mock WealthAPI → Supabase.
+ *
+ * Serve ora per testare tutto il ciclo:
+ * mock brokerage → mapper → Supabase → Wealth dashboard.
+ */
+export async function syncMockWealthPortfolioToSupabase(
+  user: User,
+  provider = "Mock Brokerage"
+): Promise<WealthPersistedSyncResult> {
+  const result = prepareMockWealthPortfolioSync(provider);
+
+  const savedAssets = await replaceSupabaseAssetsBySource(
+    user,
+    "wealth_api",
+    result.mappedAssets
+  );
+
+  return {
+    ...result,
+    savedAssets,
   };
 }

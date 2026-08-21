@@ -62,11 +62,18 @@ type WealthStyles = {
   assetInfo: ViewStyle;
   assetName: TextStyle;
   assetMeta: TextStyle;
+  assetSourceRow: ViewStyle;
+  sourcePill: ViewStyle;
+  sourcePillSynced: ViewStyle;
+  sourcePillText: TextStyle;
+  sourcePillTextSynced: TextStyle;
   assetValueBox: ViewStyle;
   assetValue: TextStyle;
   assetSource: TextStyle;
   deleteButton: ViewStyle;
   deleteButtonText: TextStyle;
+  lockedButton: ViewStyle;
+  lockedButtonText: TextStyle;
   insightCard: ViewStyle;
   insightKicker: TextStyle;
   insightTitle: TextStyle;
@@ -92,6 +99,34 @@ function getAssetInitial(asset: ElaraAsset) {
   return asset.name.trim().charAt(0).toUpperCase();
 }
 
+function isBrokerSyncedAsset(asset: ElaraAsset) {
+  return asset.source === "wealth_api";
+}
+
+function getAssetSourceLabel(asset: ElaraAsset) {
+  if (asset.source === "wealth_api") {
+    return asset.provider ? `Broker sync · ${asset.provider}` : "Broker sync";
+  }
+
+  if (asset.source === "pdf") {
+    return asset.provider ? `PDF import · ${asset.provider}` : "PDF import";
+  }
+
+  return asset.provider ?? "Manual input";
+}
+
+function getAssetActionLabel(asset: ElaraAsset) {
+  if (asset.source === "wealth_api") {
+    return "Synced";
+  }
+
+  if (asset.source === "pdf") {
+    return "Imported";
+  }
+
+  return "Edit";
+}
+
 export default function WealthScreen() {
   const { assets, totalNetWorth, deleteAsset } = usePortfolio();
   const { completeSetup } = useAppSession();
@@ -104,10 +139,18 @@ export default function WealthScreen() {
     completeSetup();
   }, [completeSetup]);
 
-  function handleDeleteAsset(assetId: string, assetName: string) {
+  function handleDeleteAsset(asset: ElaraAsset) {
+    if (isBrokerSyncedAsset(asset)) {
+      Alert.alert(
+        "Broker synced asset",
+        "This asset comes from a broker connection and cannot be deleted individually. In the real WealthAPI flow, imported assets will be removed by disconnecting or refreshing the broker sync."
+      );
+      return;
+    }
+
     Alert.alert(
       "Delete asset",
-      `Remove ${assetName} from your local portfolio?`,
+      `Remove ${asset.name} from your portfolio?`,
       [
         {
           text: "Cancel",
@@ -116,16 +159,24 @@ export default function WealthScreen() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => deleteAsset(assetId),
+          onPress: () => deleteAsset(asset.id),
         },
       ]
     );
   }
 
-  function handleEditAsset(assetId: string) {
+  function handleOpenAsset(asset: ElaraAsset) {
+    if (isBrokerSyncedAsset(asset)) {
+      Alert.alert(
+        "Broker synced asset",
+        "This asset is imported from WealthAPI and is read-only. Its value should be updated through the broker sync, not edited manually."
+      );
+      return;
+    }
+
     router.push({
       pathname: "/edit-asset",
-      params: { assetId },
+      params: { assetId: asset.id },
     } as any);
   }
 
@@ -251,46 +302,76 @@ export default function WealthScreen() {
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Assets</Text>
-        <Text style={styles.sectionHint}>Tap to edit</Text>
+        <Text style={styles.sectionHint}>Manual assets can be edited</Text>
       </View>
 
       <View style={styles.assetList}>
-        {assets.map((asset) => (
-          <View key={asset.id} style={styles.assetCard}>
-            <Pressable
-              style={styles.assetOpenArea}
-              onPress={() => handleEditAsset(asset.id)}
-            >
-              <View style={styles.assetIcon}>
-                <Text style={styles.assetIconText}>
-                  {getAssetInitial(asset)}
-                </Text>
-              </View>
+        {assets.map((asset) => {
+          const isSynced = isBrokerSyncedAsset(asset);
 
-              <View style={styles.assetInfo}>
-                <Text style={styles.assetName}>{asset.name}</Text>
-                <Text style={styles.assetMeta}>
-                  {assetLabels[asset.asset_type]} ·{" "}
-                  {asset.provider ?? "Manual input"}
-                </Text>
-              </View>
+          return (
+            <View key={asset.id} style={styles.assetCard}>
+              <Pressable
+                style={styles.assetOpenArea}
+                onPress={() => handleOpenAsset(asset)}
+              >
+                <View style={styles.assetIcon}>
+                  <Text style={styles.assetIconText}>
+                    {getAssetInitial(asset)}
+                  </Text>
+                </View>
 
-              <View style={styles.assetValueBox}>
-                <Text style={styles.assetValue}>
-                  {formatCurrency(asset.current_value, asset.currency)}
-                </Text>
-                <Text style={styles.assetSource}>Edit</Text>
-              </View>
-            </Pressable>
+                <View style={styles.assetInfo}>
+                  <Text style={styles.assetName}>{asset.name}</Text>
 
-            <Pressable
-              style={styles.deleteButton}
-              onPress={() => handleDeleteAsset(asset.id, asset.name)}
-            >
-              <Text style={styles.deleteButtonText}>×</Text>
-            </Pressable>
-          </View>
-        ))}
+                  <Text style={styles.assetMeta}>
+                    {assetLabels[asset.asset_type]} · {getAssetSourceLabel(asset)}
+                  </Text>
+
+                  <View style={styles.assetSourceRow}>
+                    <View
+                      style={[
+                        styles.sourcePill,
+                        isSynced && styles.sourcePillSynced,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.sourcePillText,
+                          isSynced && styles.sourcePillTextSynced,
+                        ]}
+                      >
+                        {isSynced ? "WealthAPI" : "Manual"}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.assetValueBox}>
+                  <Text style={styles.assetValue}>
+                    {formatCurrency(asset.current_value, asset.currency)}
+                  </Text>
+                  <Text style={styles.assetSource}>
+                    {getAssetActionLabel(asset)}
+                  </Text>
+                </View>
+              </Pressable>
+
+              {isSynced ? (
+                <View style={styles.lockedButton}>
+                  <Text style={styles.lockedButtonText}>↻</Text>
+                </View>
+              ) : (
+                <Pressable
+                  style={styles.deleteButton}
+                  onPress={() => handleDeleteAsset(asset)}
+                >
+                  <Text style={styles.deleteButtonText}>×</Text>
+                </Pressable>
+              )}
+            </View>
+          );
+        })}
       </View>
 
       <View style={styles.normalizedCard}>
@@ -328,18 +409,18 @@ export default function WealthScreen() {
         </View>
 
         <Text style={styles.normalizedText}>
-          This is the standardized portfolio object that will later be saved on
-          Supabase and exposed through FastAPI.
+          This is the standardized portfolio object used by Elara to combine
+          manual assets, PDF imports, and broker synced assets into one wealth
+          view.
         </Text>
       </View>
 
       <View style={styles.insightCard}>
         <Text style={styles.insightKicker}>Data layer</Text>
-        <Text style={styles.insightTitle}>Manual import is now active</Text>
+        <Text style={styles.insightTitle}>Portfolio sources are separated</Text>
         <Text style={styles.insightText}>
-          Every asset you add is stored in the local Elara portfolio structure.
-          Next step: persist this same model on Supabase and expose it through
-          FastAPI.
+          Manual assets can be edited by the user. Broker synced assets are
+          read-only and should be updated through the WealthAPI sync flow.
         </Text>
       </View>
     </ScrollView>
@@ -601,6 +682,38 @@ const styles = StyleSheet.create<WealthStyles>({
     letterSpacing: -0.15,
   },
 
+  assetSourceRow: {
+    marginTop: 8,
+    flexDirection: "row",
+    alignItems: "center",
+  },
+
+  sourcePill: {
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
+
+  sourcePillSynced: {
+    backgroundColor: "rgba(255,255,255,0.18)",
+    borderColor: "rgba(255,255,255,0.22)",
+  },
+
+  sourcePillText: {
+    color: "rgba(255,255,255,0.62)",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: 0.2,
+    textTransform: "uppercase",
+  },
+
+  sourcePillTextSynced: {
+    color: "#FFFFFF",
+  },
+
   assetValueBox: {
     alignItems: "flex-end",
     marginLeft: 12,
@@ -637,6 +750,23 @@ const styles = StyleSheet.create<WealthStyles>({
     fontSize: 20,
     fontWeight: "800",
     lineHeight: 22,
+  },
+
+  lockedButton: {
+    width: 32,
+    height: 32,
+    marginLeft: 10,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  lockedButtonText: {
+    color: "rgba(255,255,255,0.42)",
+    fontSize: 17,
+    fontWeight: "900",
+    lineHeight: 20,
   },
 
   normalizedCard: {

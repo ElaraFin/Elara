@@ -33,6 +33,8 @@ export type SupabaseAssetInput = {
   currency: Currency;
   source?: AssetSource;
   provider?: string;
+  external_id?: string;
+  raw_payload?: Record<string, unknown>;
 };
 
 export type SupabaseAssetUpdateInput = Partial<SupabaseAssetInput>;
@@ -116,8 +118,8 @@ export async function createSupabaseAsset(
       currency: input.currency,
       source: input.source ?? "manual",
       provider: input.provider ?? null,
-      external_id: null,
-      raw_payload: null,
+      external_id: input.external_id ?? null,
+      raw_payload: input.raw_payload ?? null,
     })
     .select("*")
     .single();
@@ -166,6 +168,14 @@ export async function updateSupabaseAsset(
     updatePayload.provider = input.provider;
   }
 
+  if (input.external_id !== undefined) {
+    updatePayload.external_id = input.external_id;
+  }
+
+  if (input.raw_payload !== undefined) {
+    updatePayload.raw_payload = input.raw_payload;
+  }
+
   const { data, error } = await supabase
     .from("assets")
     .update(updatePayload)
@@ -193,4 +203,51 @@ export async function deleteSupabaseAsset(user: User, assetId: string) {
   if (error) {
     throw new Error(error.message);
   }
+}
+
+export async function replaceSupabaseAssetsBySource(
+  user: User,
+  source: AssetSource,
+  assets: SupabaseAssetInput[]
+) {
+  await ensureProfile(user);
+
+  const { error: deleteError } = await supabase
+    .from("assets")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("source", source);
+
+  if (deleteError) {
+    throw new Error(deleteError.message);
+  }
+
+  if (assets.length === 0) {
+    return [];
+  }
+
+  const insertPayload = assets.map((asset) => ({
+    user_id: user.id,
+    portfolio_id: null,
+    name: asset.name,
+    asset_type: asset.asset_type,
+    quantity: asset.quantity ?? null,
+    current_value: asset.current_value,
+    currency: asset.currency,
+    source: asset.source ?? source,
+    provider: asset.provider ?? null,
+    external_id: asset.external_id ?? null,
+    raw_payload: asset.raw_payload ?? null,
+  }));
+
+  const { data, error } = await supabase
+    .from("assets")
+    .insert(insertPayload)
+    .select("*");
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? []).map((row) => mapSupabaseAsset(row as SupabaseAssetRow));
 }

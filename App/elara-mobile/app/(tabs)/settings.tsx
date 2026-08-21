@@ -14,16 +14,20 @@ import { useAppSession } from "../../lib/app-session-store";
 import { useAuth } from "../../lib/auth-store";
 import { usePortfolio } from "../../lib/portfolio-store";
 import { supabase } from "../../lib/supabase";
-import { prepareMockWealthPortfolioSync } from "../../lib/wealth-api/wealth-sync";
+import {
+  prepareMockWealthPortfolioSync,
+  syncMockWealthPortfolioToSupabase,
+} from "../../lib/wealth-api/wealth-sync";
 
 export default function SettingsScreen() {
-  const { resetPortfolio } = usePortfolio();
+  const { resetPortfolio, reloadPortfolio } = usePortfolio();
   const { resetSetup } = useAppSession();
   const { user, isAuthLoading, signOut } = useAuth();
 
   const [isTestingSupabase, setIsTestingSupabase] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isTestingWealthMock, setIsTestingWealthMock] = useState(false);
+  const [isImportingWealthMock, setIsImportingWealthMock] = useState(false);
 
   const userEmail = user?.email ?? "Unknown email";
 
@@ -156,6 +160,39 @@ export default function SettingsScreen() {
     }
   }
 
+  async function handleImportWealthMockAssets() {
+    if (!user) {
+      Alert.alert(
+        "Sign in required",
+        "You need to be signed in before importing brokerage assets."
+      );
+      return;
+    }
+
+    try {
+      setIsImportingWealthMock(true);
+
+      const result = await syncMockWealthPortfolioToSupabase(
+        user,
+        "Mock Brokerage"
+      );
+
+      await reloadPortfolio();
+
+      Alert.alert(
+        "Mock WealthAPI assets imported",
+        `Saved ${result.savedAssets.length} assets to Supabase.\n\nThese assets have source=wealth_api and should now appear in the Wealth dashboard.`
+      );
+    } catch (error) {
+      Alert.alert(
+        "Import failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    } finally {
+      setIsImportingWealthMock(false);
+    }
+  }
+
   return (
     <ScrollView
       style={styles.screen}
@@ -281,8 +318,8 @@ export default function SettingsScreen() {
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>WealthAPI</Text>
           <Text style={styles.cardSubtitle}>
-            Test the WealthAPI mapping layer without calling the real sandbox
-            yet.
+            Test the WealthAPI mapping and Supabase sync layer without calling
+            the real sandbox yet.
           </Text>
         </View>
 
@@ -315,6 +352,26 @@ export default function SettingsScreen() {
             ]}
           >
             {isTestingWealthMock ? "Testing..." : "Test WealthAPI mock sync"}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.outlineButton,
+            isImportingWealthMock && styles.outlineButtonDisabled,
+          ]}
+          onPress={handleImportWealthMockAssets}
+          disabled={isImportingWealthMock}
+        >
+          <Text
+            style={[
+              styles.outlineButtonText,
+              isImportingWealthMock && styles.outlineButtonTextDisabled,
+            ]}
+          >
+            {isImportingWealthMock
+              ? "Importing..."
+              : "Import mock WealthAPI assets"}
           </Text>
         </Pressable>
       </View>
