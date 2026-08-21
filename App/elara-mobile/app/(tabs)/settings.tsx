@@ -37,6 +37,10 @@ export default function SettingsScreen() {
     router.push("/create-account" as any);
   }
 
+  function handleOpenWealthSetup() {
+    router.push("/wealth-setup" as any);
+  }
+
   function handleResetLocalData() {
     Alert.alert(
       "Reset local data",
@@ -420,6 +424,10 @@ export default function SettingsScreen() {
               ? "Importing..."
               : "Import mock WealthAPI assets"}
           </Text>
+        </Pressable>
+
+        <Pressable style={styles.outlineButton} onPress={handleOpenWealthSetup}>
+          <Text style={styles.outlineButtonText}>Open Wealth setup</Text>
         </Pressable>
 
         <Pressable

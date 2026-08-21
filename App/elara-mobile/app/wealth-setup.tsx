@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import {
+  Alert,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -8,6 +9,10 @@ import {
   Text,
   View,
 } from "react-native";
+
+import { useAuth } from "../lib/auth-store";
+import { usePortfolio } from "../lib/portfolio-store";
+import { syncMockWealthPortfolioToSupabase } from "../lib/wealth-api/wealth-sync";
 
 type AssetCategory =
   | "bank"
@@ -76,11 +81,16 @@ const assetCategories: {
 ];
 
 export default function WealthSetupScreen() {
+  const { user } = useAuth();
+  const { reloadPortfolio } = usePortfolio();
+
   const [selectedCategories, setSelectedCategories] = useState<AssetCategory[]>([
     "bank",
     "broker",
     "etf",
   ]);
+
+  const [isConnectingBroker, setIsConnectingBroker] = useState(false);
 
   function toggleCategory(category: AssetCategory) {
     setSelectedCategories((current) => {
@@ -90,6 +100,56 @@ export default function WealthSetupScreen() {
 
       return [...current, category];
     });
+  }
+
+  function handleManualInput() {
+    router.push("/add-asset" as any);
+  }
+
+  function handlePdfImport() {
+    Alert.alert(
+      "PDF import",
+      "PDF import is already part of the Elara roadmap. For the mobile MVP, this button is prepared as the entry point for statement parsing."
+    );
+  }
+
+  async function handleConnectBrokerMock() {
+    if (!user) {
+      Alert.alert(
+        "Sign in required",
+        "You need to be signed in before connecting a broker account."
+      );
+      return;
+    }
+
+    try {
+      setIsConnectingBroker(true);
+
+      const result = await syncMockWealthPortfolioToSupabase(
+        user,
+        "Mock Brokerage"
+      );
+
+      await reloadPortfolio();
+
+      Alert.alert(
+        "Broker connected",
+        `Imported ${result.savedAssets.length} mock broker assets through the WealthAPI sync layer.`,
+        [
+          {
+            text: "View Wealth",
+            onPress: () => router.replace("/(tabs)/wealth" as any),
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert(
+        "Broker connection failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    } finally {
+      setIsConnectingBroker(false);
+    }
   }
 
   const selectedCount = selectedCategories.length;
@@ -116,23 +176,91 @@ export default function WealthSetupScreen() {
           contentContainerStyle={styles.scrollContent}
         >
           <View style={styles.headerBlock}>
-            <Text style={styles.eyebrow}>MANUAL WEALTH INPUT</Text>
+            <Text style={styles.eyebrow}>WEALTH SETUP</Text>
 
             <Text style={styles.title}>
-              Choose your{"\n"}first asset sources.
+              Connect your{"\n"}first wealth data.
             </Text>
 
             <Text style={styles.subtitle}>
-              Select the categories you want to map first. Elara will merge them
-              into one portfolio view.
+              Start manually, import documents, or connect a broker. Elara
+              normalizes every source into one portfolio view.
             </Text>
+          </View>
+
+          <View style={styles.importPanel}>
+            <Text style={styles.importEyebrow}>DATA SOURCES</Text>
+            <Text style={styles.importTitle}>Choose how to start</Text>
+
+            <Pressable style={styles.importCard} onPress={handleManualInput}>
+              <View style={styles.importIcon}>
+                <Text style={styles.importIconText}>＋</Text>
+              </View>
+
+              <View style={styles.importCopy}>
+                <Text style={styles.importCardTitle}>Manual input</Text>
+                <Text style={styles.importCardText}>
+                  Add cash, ETFs, stocks, crypto, real estate or physical assets
+                  manually.
+                </Text>
+              </View>
+
+              <Text style={styles.importArrow}>→</Text>
+            </Pressable>
+
+            <Pressable style={styles.importCard} onPress={handlePdfImport}>
+              <View style={styles.importIcon}>
+                <Text style={styles.importIconText}>PDF</Text>
+              </View>
+
+              <View style={styles.importCopy}>
+                <Text style={styles.importCardTitle}>Import statement</Text>
+                <Text style={styles.importCardText}>
+                  Prepare the flow for bank and broker PDF parsing.
+                </Text>
+              </View>
+
+              <Text style={styles.importArrow}>→</Text>
+            </Pressable>
+
+            <Pressable
+              style={[
+                styles.importCard,
+                styles.brokerImportCard,
+                isConnectingBroker && styles.importCardDisabled,
+              ]}
+              onPress={handleConnectBrokerMock}
+              disabled={isConnectingBroker}
+            >
+              <View style={[styles.importIcon, styles.brokerImportIcon]}>
+                <Text style={styles.brokerImportIconText}>WA</Text>
+              </View>
+
+              <View style={styles.importCopy}>
+                <Text
+                  style={[styles.importCardTitle, styles.brokerImportCardTitle]}
+                >
+                  {isConnectingBroker ? "Connecting broker..." : "Connect broker"}
+                </Text>
+                <Text
+                  style={[styles.importCardText, styles.brokerImportCardText]}
+                >
+                  Use the mocked WealthAPI sync now. Later this becomes the real
+                  broker connection flow.
+                </Text>
+              </View>
+
+              <Text style={[styles.importArrow, styles.brokerImportArrow]}>
+                →
+              </Text>
+            </Pressable>
           </View>
 
           <View style={styles.mergerPanel}>
             <View style={styles.mergerHeader}>
               <View>
                 <Text style={styles.mergerEyebrow}>MERGER MODULE</Text>
-                <Text style={styles.mergerTitle}>Manual import</Text>
+                <Text style={styles.mergerTitle}>Portfolio categories</Text>
               </View>
 
               <View style={styles.countPill}>
@@ -208,10 +336,10 @@ export default function WealthSetupScreen() {
           </View>
 
           <View style={styles.noteCard}>
-            <Text style={styles.noteTitle}>You can update this later.</Text>
+            <Text style={styles.noteTitle}>Sources stay separated.</Text>
             <Text style={styles.noteText}>
-              The MVP starts with manual data. Bank and broker connections can
-              be added later through WealthAPI.
+              Manual assets remain editable. Broker-synced assets are read-only
+              and updated through WealthAPI sync.
             </Text>
           </View>
         </ScrollView>
@@ -223,7 +351,7 @@ export default function WealthSetupScreen() {
               selectedCount === 0 && styles.primaryButtonDisabled,
             ]}
             disabled={selectedCount === 0}
-            onPress={() => router.replace("/(tabs)/wealth")}
+            onPress={() => router.replace("/(tabs)/wealth" as any)}
           >
             <Text style={styles.primaryButtonText}>Enter Elara</Text>
             <Text style={styles.arrow}>→</Text>
@@ -395,7 +523,7 @@ const styles = StyleSheet.create({
 
   scrollContent: {
     paddingTop: 28,
-    paddingBottom: 96,
+    paddingBottom: 112,
   },
 
   headerBlock: {
@@ -425,6 +553,117 @@ const styles = StyleSheet.create({
     lineHeight: 23,
     fontWeight: "600",
     letterSpacing: -0.25,
+  },
+
+  importPanel: {
+    marginBottom: 12,
+    borderRadius: 32,
+    backgroundColor: "#151515",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    padding: 18,
+  },
+
+  importEyebrow: {
+    color: "rgba(255,255,255,0.42)",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 2.6,
+  },
+
+  importTitle: {
+    marginTop: 4,
+    marginBottom: 16,
+    color: "#FFFFFF",
+    fontSize: 22,
+    fontWeight: "900",
+    letterSpacing: -0.9,
+  },
+
+  importCard: {
+    minHeight: 92,
+    marginTop: 10,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.075)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 13,
+  },
+
+  brokerImportCard: {
+    backgroundColor: "#FFFFFF",
+    borderColor: "#FFFFFF",
+  },
+
+  brokerImportCardTitle: {
+    color: "#050505",
+  },
+
+  brokerImportCardText: {
+    color: "rgba(0,0,0,0.58)",
+  },
+
+  brokerImportArrow: {
+    color: "rgba(0,0,0,0.58)",
+  },
+
+  importCardDisabled: {
+    opacity: 0.55,
+  },
+
+  importIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  importIconText: {
+    color: "#050505",
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: -0.3,
+  },
+
+  brokerImportIcon: {
+    backgroundColor: "#050505",
+  },
+
+  brokerImportIconText: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: -0.3,
+  },
+
+  importCopy: {
+    flex: 1,
+  },
+
+  importCardTitle: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "900",
+    letterSpacing: -0.4,
+  },
+
+  importCardText: {
+    marginTop: 5,
+    color: "rgba(255,255,255,0.52)",
+    fontSize: 13,
+    lineHeight: 17,
+    fontWeight: "600",
+  },
+
+  importArrow: {
+    color: "rgba(255,255,255,0.56)",
+    fontSize: 22,
+    fontWeight: "900",
   },
 
   mergerPanel: {
