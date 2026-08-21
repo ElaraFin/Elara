@@ -16,6 +16,7 @@ import { usePortfolio } from "../../lib/portfolio-store";
 import { supabase } from "../../lib/supabase";
 import {
   prepareMockWealthPortfolioSync,
+  removeWealthPortfolioFromSupabase,
   syncMockWealthPortfolioToSupabase,
 } from "../../lib/wealth-api/wealth-sync";
 
@@ -28,6 +29,7 @@ export default function SettingsScreen() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isTestingWealthMock, setIsTestingWealthMock] = useState(false);
   const [isImportingWealthMock, setIsImportingWealthMock] = useState(false);
+  const [isRemovingWealthImport, setIsRemovingWealthImport] = useState(false);
 
   const userEmail = user?.email ?? "Unknown email";
 
@@ -191,6 +193,51 @@ export default function SettingsScreen() {
     } finally {
       setIsImportingWealthMock(false);
     }
+  }
+
+  function handleRemoveWealthImportedAssets() {
+    if (!user) {
+      Alert.alert(
+        "Sign in required",
+        "You need to be signed in before removing imported brokerage assets."
+      );
+      return;
+    }
+
+    Alert.alert(
+      "Remove imported assets",
+      "This will remove all assets imported from WealthAPI. Manual assets will not be touched.",
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+        },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              setIsRemovingWealthImport(true);
+
+              await removeWealthPortfolioFromSupabase(user);
+              await reloadPortfolio();
+
+              Alert.alert(
+                "Imported assets removed",
+                "All WealthAPI imported assets have been removed. Manual assets are unchanged."
+              );
+            } catch (error) {
+              Alert.alert(
+                "Remove failed",
+                error instanceof Error ? error.message : "Unknown error"
+              );
+            } finally {
+              setIsRemovingWealthImport(false);
+            }
+          },
+        },
+      ]
+    );
   }
 
   return (
@@ -372,6 +419,26 @@ export default function SettingsScreen() {
             {isImportingWealthMock
               ? "Importing..."
               : "Import mock WealthAPI assets"}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.removeImportButton,
+            isRemovingWealthImport && styles.removeImportButtonDisabled,
+          ]}
+          onPress={handleRemoveWealthImportedAssets}
+          disabled={isRemovingWealthImport}
+        >
+          <Text
+            style={[
+              styles.removeImportButtonText,
+              isRemovingWealthImport && styles.removeImportButtonTextDisabled,
+            ]}
+          >
+            {isRemovingWealthImport
+              ? "Removing..."
+              : "Remove imported WealthAPI assets"}
           </Text>
         </Pressable>
       </View>
@@ -628,6 +695,32 @@ const styles = StyleSheet.create({
 
   outlineButtonTextDisabled: {
     color: "rgba(255,255,255,0.42)",
+  },
+
+  removeImportButton: {
+    marginTop: 14,
+    height: 54,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,70,70,0.10)",
+    borderWidth: 1,
+    borderColor: "rgba(255,90,90,0.24)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  removeImportButtonDisabled: {
+    opacity: 0.55,
+  },
+
+  removeImportButtonText: {
+    color: "rgba(255,210,210,0.92)",
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: -0.3,
+  },
+
+  removeImportButtonTextDisabled: {
+    color: "rgba(255,255,255,0.36)",
   },
 
   dangerCard: {

@@ -2,6 +2,7 @@ import type { User } from "@supabase/supabase-js";
 
 import type { ElaraAsset } from "../portfolio-store";
 import {
+  deleteSupabaseAssetsBySource,
   replaceSupabaseAssetsBySource,
   type SupabaseAssetInput,
 } from "../supabase-assets";
@@ -197,4 +198,14 @@ export async function syncMockWealthPortfolioToSupabase(
     ...result,
     savedAssets,
   };
+}
+
+/**
+ * Rimuove tutti gli asset importati da WealthAPI.
+ *
+ * Serve per simulare il futuro comportamento:
+ * disconnect broker / remove broker import.
+ */
+export async function removeWealthPortfolioFromSupabase(user: User) {
+  await deleteSupabaseAssetsBySource(user, "wealth_api");
 }

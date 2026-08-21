@@ -251,3 +251,20 @@ export async function replaceSupabaseAssetsBySource(
 
   return (data ?? []).map((row) => mapSupabaseAsset(row as SupabaseAssetRow));
 }
+
+export async function deleteSupabaseAssetsBySource(
+  user: User,
+  source: AssetSource
+) {
+  await ensureProfile(user);
+
+  const { error } = await supabase
+    .from("assets")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("source", source);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
