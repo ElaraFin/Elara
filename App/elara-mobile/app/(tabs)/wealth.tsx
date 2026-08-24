@@ -1,4 +1,5 @@
 import { useAppSession } from "../../lib/app-session-store";
+import { generatePortfolioInsight } from "../../lib/portfolio-insights";
 import { normalizePortfolio } from "../../lib/portfolio-normalizer";
 import { AssetType, ElaraAsset, usePortfolio } from "../../lib/portfolio-store";
 import { router } from "expo-router";
@@ -94,6 +95,10 @@ type WealthStyles = {
   insightCard: ViewStyle;
   insightKicker: TextStyle;
   insightTitle: TextStyle;
+  insightBlock: ViewStyle;
+  insightBlockIcon: TextStyle;
+  insightBlockContent: ViewStyle;
+  insightBlockTitle: TextStyle;
   insightText: TextStyle;
   normalizedCard: ViewStyle;
   normalizedKicker: TextStyle;
@@ -164,6 +169,10 @@ export default function WealthScreen() {
   const normalizedPortfolio = useMemo(() => {
     return normalizePortfolio(assets);
   }, [assets]);
+
+  const portfolioInsight = useMemo(() => {
+    return generatePortfolioInsight(assets, totalNetWorth);
+  }, [assets, totalNetWorth]);
 
   useEffect(() => {
     completeSetup();
@@ -336,7 +345,9 @@ export default function WealthScreen() {
         <View style={styles.sourcesHeader}>
           <View style={styles.sourcesHeaderCopy}>
             <Text style={styles.sourcesKicker}>Connected sources</Text>
-            <Text style={styles.sourcesTitle}>Where your wealth data comes from</Text>
+            <Text style={styles.sourcesTitle}>
+              Where your wealth data comes from
+            </Text>
           </View>
 
           <Pressable
@@ -442,7 +453,8 @@ export default function WealthScreen() {
                   <Text style={styles.assetName}>{asset.name}</Text>
 
                   <Text style={styles.assetMeta}>
-                    {assetLabels[asset.asset_type]} · {getAssetSourceLabel(asset)}
+                    {assetLabels[asset.asset_type]} ·{" "}
+                    {getAssetSourceLabel(asset)}
                   </Text>
 
                   <View style={styles.assetSourceRow}>
@@ -533,12 +545,34 @@ export default function WealthScreen() {
       </View>
 
       <View style={styles.insightCard}>
-        <Text style={styles.insightKicker}>Data layer</Text>
-        <Text style={styles.insightTitle}>Portfolio sources are separated</Text>
-        <Text style={styles.insightText}>
-          Manual assets can be edited by the user. Broker synced assets are
-          read-only and should be updated through the WealthAPI sync flow.
-        </Text>
+        <Text style={styles.insightKicker}>Portfolio insight</Text>
+        <Text style={styles.insightTitle}>Early analysis</Text>
+
+        <View style={styles.insightBlock}>
+          <Text style={styles.insightBlockIcon}>📌</Text>
+          <View style={styles.insightBlockContent}>
+            <Text style={styles.insightBlockTitle}>Current state</Text>
+            <Text style={styles.insightText}>{portfolioInsight.currentState}</Text>
+          </View>
+        </View>
+
+        <View style={styles.insightBlock}>
+          <Text style={styles.insightBlockIcon}>📉</Text>
+          <View style={styles.insightBlockContent}>
+            <Text style={styles.insightBlockTitle}>Risks or imbalances</Text>
+            <Text style={styles.insightText}>{portfolioInsight.risks}</Text>
+          </View>
+        </View>
+
+        <View style={styles.insightBlock}>
+          <Text style={styles.insightBlockIcon}>🔄</Text>
+          <View style={styles.insightBlockContent}>
+            <Text style={styles.insightBlockTitle}>Possible actions</Text>
+            <Text style={styles.insightText}>
+              {portfolioInsight.possibleActions}
+            </Text>
+          </View>
+        </View>
       </View>
     </ScrollView>
   );
@@ -1096,6 +1130,30 @@ const styles = StyleSheet.create<WealthStyles>({
     fontSize: 20,
     fontWeight: "900",
     letterSpacing: -0.65,
+  },
+
+  insightBlock: {
+    marginTop: 18,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+
+  insightBlockIcon: {
+    width: 28,
+    fontSize: 20,
+    lineHeight: 25,
+  },
+
+  insightBlockContent: {
+    flex: 1,
+  },
+
+  insightBlockTitle: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "900",
+    letterSpacing: -0.35,
   },
 
   insightText: {
