@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Alert,
   Pressable,
@@ -80,9 +80,17 @@ const assetCategories: {
   },
 ];
 
+function formatCurrency(value: number, currency = "EUR") {
+  return new Intl.NumberFormat("it-IT", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
 export default function WealthSetupScreen() {
   const { user } = useAuth();
-  const { reloadPortfolio } = usePortfolio();
+  const { assets, reloadPortfolio } = usePortfolio();
 
   const [selectedCategories, setSelectedCategories] = useState<AssetCategory[]>([
     "bank",
@@ -91,6 +99,19 @@ export default function WealthSetupScreen() {
   ]);
 
   const [isConnectingBroker, setIsConnectingBroker] = useState(false);
+
+  const brokerSyncedAssets = useMemo(() => {
+    return assets.filter((asset) => asset.source === "wealth_api");
+  }, [assets]);
+
+  const brokerSyncedValue = useMemo(() => {
+    return brokerSyncedAssets.reduce(
+      (total, asset) => total + asset.current_value,
+      0
+    );
+  }, [brokerSyncedAssets]);
+
+  const hasBrokerSync = brokerSyncedAssets.length > 0;
 
   function toggleCategory(category: AssetCategory) {
     setSelectedCategories((current) => {
@@ -125,6 +146,8 @@ export default function WealthSetupScreen() {
     try {
       setIsConnectingBroker(true);
 
+      const wasAlreadySynced = hasBrokerSync;
+
       const result = await syncMockWealthPortfolioToSupabase(
         user,
         "Mock Brokerage"
@@ -133,8 +156,10 @@ export default function WealthSetupScreen() {
       await reloadPortfolio();
 
       Alert.alert(
-        "Broker connected",
-        `Imported ${result.savedAssets.length} mock broker assets through the WealthAPI sync layer.`,
+        wasAlreadySynced ? "Broker sync refreshed" : "Broker connected",
+        wasAlreadySynced
+          ? `Refreshed ${result.savedAssets.length} mock broker assets through the WealthAPI sync layer.`
+          : `Imported ${result.savedAssets.length} mock broker assets through the WealthAPI sync layer.`,
         [
           {
             text: "View Wealth",
@@ -192,6 +217,24 @@ export default function WealthSetupScreen() {
             <Text style={styles.importEyebrow}>DATA SOURCES</Text>
             <Text style={styles.importTitle}>Choose how to start</Text>
 
+            {hasBrokerSync ? (
+              <View style={styles.brokerStatusCard}>
+                <View>
+                  <Text style={styles.brokerStatusLabel}>Broker sync active</Text>
+                  <Text style={styles.brokerStatusValue}>
+                    {formatCurrency(brokerSyncedValue)}
+                  </Text>
+                </View>
+
+                <View style={styles.brokerStatusPill}>
+                  <Text style={styles.brokerStatusPillText}>
+                    {brokerSyncedAssets.length}{" "}
+                    {brokerSyncedAssets.length === 1 ? "asset" : "assets"}
+                  </Text>
+                </View>
+              </View>
+            ) : null}
+
             <Pressable style={styles.importCard} onPress={handleManualInput}>
               <View style={styles.importIcon}>
                 <Text style={styles.importIconText}>＋</Text>
@@ -240,13 +283,21 @@ export default function WealthSetupScreen() {
                 <Text
                   style={[styles.importCardTitle, styles.brokerImportCardTitle]}
                 >
-                  {isConnectingBroker ? "Connecting broker..." : "Connect broker"}
+                  {isConnectingBroker
+                    ? hasBrokerSync
+                      ? "Refreshing sync..."
+                      : "Connecting broker..."
+                    : hasBrokerSync
+                      ? "Refresh broker sync"
+                      : "Connect broker"}
                 </Text>
+
                 <Text
                   style={[styles.importCardText, styles.brokerImportCardText]}
                 >
-                  Use the mocked WealthAPI sync now. Later this becomes the real
-                  broker connection flow.
+                  {hasBrokerSync
+                    ? "Replace the current WealthAPI imported assets with the latest broker snapshot."
+                    : "Use the mocked WealthAPI sync now. Later this becomes the real broker connection flow."}
                 </Text>
               </View>
 
@@ -578,6 +629,47 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "900",
     letterSpacing: -0.9,
+  },
+
+  brokerStatusCard: {
+    marginBottom: 12,
+    padding: 14,
+    borderRadius: 22,
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+
+  brokerStatusLabel: {
+    color: "rgba(255,255,255,0.52)",
+    fontSize: 12,
+    fontWeight: "800",
+    letterSpacing: -0.1,
+  },
+
+  brokerStatusValue: {
+    marginTop: 4,
+    color: "#FFFFFF",
+    fontSize: 19,
+    fontWeight: "900",
+    letterSpacing: -0.7,
+  },
+
+  brokerStatusPill: {
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+  },
+
+  brokerStatusPillText: {
+    color: "#050505",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: -0.2,
   },
 
   importCard: {
