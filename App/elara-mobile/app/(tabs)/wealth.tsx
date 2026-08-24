@@ -42,6 +42,23 @@ type WealthStyles = {
   heroMetaValue: TextStyle;
   heroMetaLabel: TextStyle;
   heroDivider: ViewStyle;
+  sourcesCard: ViewStyle;
+  sourcesHeader: ViewStyle;
+  sourcesHeaderCopy: ViewStyle;
+  sourcesKicker: TextStyle;
+  sourcesTitle: TextStyle;
+  manageSourcesButton: ViewStyle;
+  manageSourcesButtonText: TextStyle;
+  sourceRows: ViewStyle;
+  sourceRow: ViewStyle;
+  sourceRowLeft: ViewStyle;
+  sourceBadge: ViewStyle;
+  sourceBadgeText: TextStyle;
+  sourceName: TextStyle;
+  sourceDescription: TextStyle;
+  sourceMetrics: ViewStyle;
+  sourceValue: TextStyle;
+  sourceCount: TextStyle;
   sectionHeader: ViewStyle;
   sectionTitle: TextStyle;
   sectionHint: TextStyle;
@@ -87,6 +104,15 @@ type WealthStyles = {
   normalizedText: TextStyle;
 };
 
+type SourceSummaryItem = {
+  key: string;
+  label: string;
+  description: string;
+  badge: string;
+  count: number;
+  value: number;
+};
+
 function formatCurrency(value: number, currency = "EUR") {
   return new Intl.NumberFormat("it-IT", {
     style: "currency",
@@ -127,6 +153,10 @@ function getAssetActionLabel(asset: ElaraAsset) {
   return "Edit";
 }
 
+function sumAssetValues(assets: ElaraAsset[]) {
+  return assets.reduce((total, asset) => total + asset.current_value, 0);
+}
+
 export default function WealthScreen() {
   const { assets, totalNetWorth, deleteAsset } = usePortfolio();
   const { completeSetup } = useAppSession();
@@ -148,21 +178,17 @@ export default function WealthScreen() {
       return;
     }
 
-    Alert.alert(
-      "Delete asset",
-      `Remove ${asset.name} from your portfolio?`,
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-        },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => deleteAsset(asset.id),
-        },
-      ]
-    );
+    Alert.alert("Delete asset", `Remove ${asset.name} from your portfolio?`, [
+      {
+        text: "Cancel",
+        style: "cancel",
+      },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => deleteAsset(asset.id),
+      },
+    ]);
   }
 
   function handleOpenAsset(asset: ElaraAsset) {
@@ -194,6 +220,53 @@ export default function WealthScreen() {
       }))
       .sort((a, b) => b.value - a.value);
   }, [assets, totalNetWorth]);
+
+  const sourceSummary = useMemo<SourceSummaryItem[]>(() => {
+    const manualAssets = assets.filter((asset) => asset.source === "manual");
+    const brokerAssets = assets.filter((asset) => asset.source === "wealth_api");
+    const pdfAssets = assets.filter((asset) => asset.source === "pdf");
+    const otherAssets = assets.filter(
+      (asset) =>
+        asset.source !== "manual" &&
+        asset.source !== "wealth_api" &&
+        asset.source !== "pdf"
+    );
+
+    return [
+      {
+        key: "manual",
+        label: "Manual input",
+        description: "Editable assets added by the user.",
+        badge: "MAN",
+        count: manualAssets.length,
+        value: sumAssetValues(manualAssets),
+      },
+      {
+        key: "broker",
+        label: "Broker sync",
+        description: "Read-only assets imported through WealthAPI.",
+        badge: "WA",
+        count: brokerAssets.length,
+        value: sumAssetValues(brokerAssets),
+      },
+      {
+        key: "pdf",
+        label: "PDF import",
+        description: "Assets parsed from statements and documents.",
+        badge: "PDF",
+        count: pdfAssets.length,
+        value: sumAssetValues(pdfAssets),
+      },
+      {
+        key: "other",
+        label: "Other sources",
+        description: "Fallback source for future integrations.",
+        badge: "API",
+        count: otherAssets.length,
+        value: sumAssetValues(otherAssets),
+      },
+    ];
+  }, [assets]);
 
   const largestAsset = useMemo(() => {
     if (assets.length === 0 || totalNetWorth <= 0) {
@@ -256,6 +329,50 @@ export default function WealthScreen() {
             <Text style={styles.heroMetaValue}>{allocation.length}</Text>
             <Text style={styles.heroMetaLabel}>Classes</Text>
           </View>
+        </View>
+      </View>
+
+      <View style={styles.sourcesCard}>
+        <View style={styles.sourcesHeader}>
+          <View style={styles.sourcesHeaderCopy}>
+            <Text style={styles.sourcesKicker}>Connected sources</Text>
+            <Text style={styles.sourcesTitle}>Where your wealth data comes from</Text>
+          </View>
+
+          <Pressable
+            style={styles.manageSourcesButton}
+            onPress={() => router.push("/wealth-setup" as any)}
+          >
+            <Text style={styles.manageSourcesButtonText}>Manage</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.sourceRows}>
+          {sourceSummary.map((source) => (
+            <View key={source.key} style={styles.sourceRow}>
+              <View style={styles.sourceRowLeft}>
+                <View style={styles.sourceBadge}>
+                  <Text style={styles.sourceBadgeText}>{source.badge}</Text>
+                </View>
+
+                <View>
+                  <Text style={styles.sourceName}>{source.label}</Text>
+                  <Text style={styles.sourceDescription}>
+                    {source.description}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.sourceMetrics}>
+                <Text style={styles.sourceValue}>
+                  {formatCurrency(source.value)}
+                </Text>
+                <Text style={styles.sourceCount}>
+                  {source.count} {source.count === 1 ? "asset" : "assets"}
+                </Text>
+              </View>
+            </View>
+          ))}
         </View>
       </View>
 
@@ -541,6 +658,135 @@ const styles = StyleSheet.create<WealthStyles>({
     height: 36,
     backgroundColor: "rgba(0,0,0,0.10)",
     marginHorizontal: 12,
+  },
+
+  sourcesCard: {
+    marginTop: 18,
+    padding: 18,
+    borderRadius: 28,
+    backgroundColor: "rgba(255,255,255,0.075)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
+
+  sourcesHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 14,
+  },
+
+  sourcesHeaderCopy: {
+    flex: 1,
+  },
+
+  sourcesKicker: {
+    color: "rgba(255,255,255,0.44)",
+    fontSize: 11,
+    fontWeight: "900",
+    letterSpacing: 1.6,
+    textTransform: "uppercase",
+  },
+
+  sourcesTitle: {
+    marginTop: 6,
+    color: "#FFFFFF",
+    fontSize: 19,
+    lineHeight: 23,
+    fontWeight: "900",
+    letterSpacing: -0.65,
+  },
+
+  manageSourcesButton: {
+    height: 38,
+    paddingHorizontal: 14,
+    borderRadius: 999,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  manageSourcesButtonText: {
+    color: "#050505",
+    fontSize: 12,
+    fontWeight: "900",
+    letterSpacing: -0.15,
+  },
+
+  sourceRows: {
+    marginTop: 18,
+    gap: 10,
+  },
+
+  sourceRow: {
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.055)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+
+  sourceRowLeft: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 11,
+  },
+
+  sourceBadge: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: "#FFFFFF",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  sourceBadgeText: {
+    color: "#050505",
+    fontSize: 10,
+    fontWeight: "900",
+    letterSpacing: -0.1,
+  },
+
+  sourceName: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "900",
+    letterSpacing: -0.25,
+  },
+
+  sourceDescription: {
+    marginTop: 3,
+    color: "rgba(255,255,255,0.44)",
+    fontSize: 12,
+    lineHeight: 16,
+    fontWeight: "600",
+    letterSpacing: -0.1,
+  },
+
+  sourceMetrics: {
+    alignItems: "flex-end",
+  },
+
+  sourceValue: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "900",
+    letterSpacing: -0.25,
+  },
+
+  sourceCount: {
+    marginTop: 3,
+    color: "rgba(255,255,255,0.40)",
+    fontSize: 11,
+    fontWeight: "800",
+    letterSpacing: -0.1,
   },
 
   sectionHeader: {
