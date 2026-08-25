@@ -1,28 +1,28 @@
 import {
   getAssetMarketValues,
-  getPortfolios,
-  loginWealthAPI,
+  setWealthToken,
 } from "./wealth-client";
 
-export async function testWealthAPI() {
+/**
+ * Test manuale per sandbox WealthAPI.
+ *
+ * Non chiamarlo dalla UI e non salvare token nel repo.
+ * Quando avremo la sandbox attiva, passa un Bearer token valido a questa funzione.
+ */
+export async function testWealthAPI(authToken: string) {
   try {
     console.log("Starting WealthAPI test...");
 
-    await loginWealthAPI("YOUR_USERNAME", "YOUR_PASSWORD");
+    setWealthToken(authToken);
 
-    console.log("WealthAPI login successful");
-
-    const assetMarketValues = await getAssetMarketValues();
+    const assetMarketValues = await getAssetMarketValues({
+      importedFromBank: true,
+    });
 
     console.log("Asset market values received:", assetMarketValues);
 
-    const portfolios = await getPortfolios();
-
-    console.log("Portfolios received:", portfolios);
-
     return {
       assetMarketValues,
-      portfolios,
     };
   } catch (error) {
     console.log("WealthAPI test failed", error);

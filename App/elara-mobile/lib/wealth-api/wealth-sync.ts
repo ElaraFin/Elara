@@ -1,5 +1,9 @@
 import type { User } from "@supabase/supabase-js";
 
+import {
+  mapBackendAssetToSupabaseInput,
+  previewBackendMockWealthAssets,
+} from "../elara-backend";
 import type { ElaraAsset } from "../portfolio-store";
 import {
   deleteSupabaseAssetsBySource,
@@ -57,8 +61,10 @@ function buildRawPayload(asset: WealthAssetMarketValue): Record<string, unknown>
     asset_type: asset.asset_type,
     isin: asset.isin,
     emitter: asset.emitter,
+    latest_quote: asset.latest_quote,
     market_value: asset.market_value,
     number_of_lots: asset.number_of_lots,
+    total_no_of_lots: asset.total_no_of_lots,
   };
 }
 
@@ -81,11 +87,6 @@ function mapWealthAssetsForSupabase(
   return assets.map((asset) => mapWealthAssetForSupabase(asset, provider));
 }
 
-/**
- * Prepara un sync WealthAPI reale.
- *
- * Per ora è pronto lato codice, ma verrà testato quando avremo sandbox.
- */
 export async function prepareWealthPortfolioSync(
   provider = "wealthAPI"
 ): Promise<WealthSyncResult> {
@@ -104,9 +105,6 @@ export async function prepareWealthPortfolioSync(
   };
 }
 
-/**
- * Versione mock utile per testare il mapping senza sandbox.
- */
 export function prepareMockWealthPortfolioSync(
   provider = "wealthAPI"
 ): WealthSyncResult {
@@ -119,22 +117,28 @@ export function prepareMockWealthPortfolioSync(
         asset_type: "ETF",
         isin: "IE00BK5BQT80",
         emitter: "Vanguard",
+        latest_quote: "156.25",
         market_value: "12500.50",
         number_of_lots: "80",
+        total_no_of_lots: "80",
       },
       {
         asset_type: "STOCK",
         isin: "US0378331005",
         emitter: "Apple Inc.",
+        latest_quote: "350.02",
         market_value: "4200.25",
         number_of_lots: "12",
+        total_no_of_lots: "12",
       },
       {
         asset_type: "CASH",
         isin: "CASH_EUR",
         emitter: "Cash balance",
+        latest_quote: "1",
         market_value: "1750.00",
         number_of_lots: "1",
+        total_no_of_lots: "1",
       },
     ],
   };
@@ -150,14 +154,24 @@ export function prepareMockWealthPortfolioSync(
   };
 }
 
-/**
- * Sync reale WealthAPI → Supabase.
- *
- * Pronto per sandbox:
- * - chiama WealthAPI
- * - mappa gli asset
- * - sostituisce gli asset source=wealth_api
- */
+export async function prepareBackendMockWealthPortfolioSync(
+  provider = "Mock Brokerage"
+): Promise<WealthSyncResult> {
+  const preview = await previewBackendMockWealthAssets(provider);
+
+  const mappedAssets = preview.mapped_assets.map(
+    mapBackendAssetToSupabaseInput
+  );
+
+  return {
+    provider: preview.provider,
+    reportDate: preview.report_date ?? undefined,
+    totalMarketValue: preview.total_market_value ?? undefined,
+    rawAssets: preview.raw_assets,
+    mappedAssets,
+  };
+}
+
 export async function syncWealthPortfolioToSupabase(
   user: User,
   provider = "wealthAPI"
@@ -176,17 +190,11 @@ export async function syncWealthPortfolioToSupabase(
   };
 }
 
-/**
- * Sync mock WealthAPI → Supabase.
- *
- * Serve ora per testare tutto il ciclo:
- * mock brokerage → mapper → Supabase → Wealth dashboard.
- */
 export async function syncMockWealthPortfolioToSupabase(
   user: User,
   provider = "Mock Brokerage"
 ): Promise<WealthPersistedSyncResult> {
-  const result = prepareMockWealthPortfolioSync(provider);
+  const result = await prepareBackendMockWealthPortfolioSync(provider);
 
   const savedAssets = await replaceSupabaseAssetsBySource(
     user,
@@ -200,12 +208,6 @@ export async function syncMockWealthPortfolioToSupabase(
   };
 }
 
-/**
- * Rimuove tutti gli asset importati da WealthAPI.
- *
- * Serve per simulare il futuro comportamento:
- * disconnect broker / remove broker import.
- */
 export async function removeWealthPortfolioFromSupabase(user: User) {
   await deleteSupabaseAssetsBySource(user, "wealth_api");
 }

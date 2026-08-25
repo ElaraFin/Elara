@@ -11,132 +11,70 @@ export type WealthAssetType =
   | "MANAGED"
   | string;
 
-
-
 export type WealthAssetMarketValue = {
   asset_type: WealthAssetType | null;
-
-  /**
-   * ISIN o identificativo strumento
-   */
   isin: string;
-
-  /**
-   * Nome emittente
-   */
   emitter: string | null;
-
-  /**
-   * Valore corrente posizione
-   */
+  latest_quote?: string | null;
   market_value: string | null;
-
-  /**
-   * Numero quote/lotti posseduti
-   */
-  number_of_lots: string | null;
+  number_of_lots?: string | null;
+  total_no_of_lots?: string | null;
 };
-
-
 
 export type WealthAssetsTotalMarketValue = {
   asset_types: WealthAssetType[] | null;
-
-  /**
-   * Data report
-   */
   date: string;
-
-  /**
-   * Valore totale patrimonio
-   */
   total_market_value: string;
-
   assets: WealthAssetMarketValue[];
 };
-
-
 
 export type WealthAssetsReportStatus =
   | "processing"
   | "success"
   | "failed"
+  | "PROCESSING"
+  | "SUCCESS"
+  | "FAILED"
   | string;
 
-
+export type WealthAssetsReportInitResponse = {
+  data: {
+    report_id: string;
+    status_url?: string;
+  };
+};
 
 export type WealthAssetsReport = {
   data: {
     report_id: string;
-
     status: WealthAssetsReportStatus;
-
-    error?: string;
-
+    error?: string | null;
     reports?: WealthAssetsTotalMarketValue[];
   };
 };
 
-
-
-
-
-/**
- * Portfolio WealthAPI
- *
- * Verrà collegato agli endpoint reali
- * accounts / portfolios dello Swagger.
- */
 export type WealthPortfolio = {
   id: string;
-
   name?: string;
-
   currency?: string;
-
   provider?: string;
-
   raw?: unknown;
 };
 
-
-
-
-
-/**
- * Conto bancario/cash account
- */
 export type WealthAccount = {
   id: string;
-
   name?: string;
-
   account_type?: string;
-
   balance?: string;
-
   currency?: string;
-
   provider?: string;
-
   raw?: unknown;
 };
 
-
-
-
-
-/**
- * Connessione banca/broker
- */
 export type WealthConnection = {
   id: string;
-
   provider?: string;
-
   status?: string;
-
   created_at?: string;
-
   raw?: unknown;
 };

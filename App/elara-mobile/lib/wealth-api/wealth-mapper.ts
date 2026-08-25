@@ -30,8 +30,8 @@ function mapWealthAssetType(type: WealthAssetType | null): AssetType {
   }
 }
 
-function parseNumber(value: string | null): number {
-  if (!value) {
+function parseNumber(value: string | number | null | undefined): number {
+  if (value === null || value === undefined || value === "") {
     return 0;
   }
 
@@ -44,6 +44,10 @@ function parseNumber(value: string | null): number {
   return parsed;
 }
 
+function getAssetQuantity(asset: WealthAssetMarketValue) {
+  return asset.number_of_lots ?? asset.total_no_of_lots ?? null;
+}
+
 function getDisplayName(asset: WealthAssetMarketValue) {
   if (asset.emitter && asset.isin) {
     return `${asset.emitter} (${asset.isin})`;
@@ -53,7 +57,11 @@ function getDisplayName(asset: WealthAssetMarketValue) {
     return asset.emitter;
   }
 
-  return asset.isin;
+  if (asset.isin) {
+    return asset.isin;
+  }
+
+  return "Unknown WealthAPI asset";
 }
 
 export function mapWealthAssetToElaraAsset(
@@ -63,7 +71,7 @@ export function mapWealthAssetToElaraAsset(
   return {
     name: getDisplayName(asset),
     asset_type: mapWealthAssetType(asset.asset_type),
-    quantity: parseNumber(asset.number_of_lots),
+    quantity: parseNumber(getAssetQuantity(asset)),
     current_value: parseNumber(asset.market_value),
     currency: "EUR" as Currency,
     source: "wealth_api",
