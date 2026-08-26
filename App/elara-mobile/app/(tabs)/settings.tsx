@@ -12,6 +12,7 @@ import {
 
 import { useAppSession } from "../../lib/app-session-store";
 import { useAuth } from "../../lib/auth-store";
+import { getBackendWealthApiStatus } from "../../lib/elara-backend";
 import { usePortfolio } from "../../lib/portfolio-store";
 import { supabase } from "../../lib/supabase";
 import {
@@ -28,6 +29,7 @@ export default function SettingsScreen() {
   const [isTestingSupabase, setIsTestingSupabase] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isTestingWealthMock, setIsTestingWealthMock] = useState(false);
+  const [isCheckingBackendStatus, setIsCheckingBackendStatus] = useState(false);
   const [isImportingWealthMock, setIsImportingWealthMock] = useState(false);
   const [isRemovingWealthImport, setIsRemovingWealthImport] = useState(false);
 
@@ -143,26 +145,48 @@ export default function SettingsScreen() {
     }
   }
 
-  function handleTestWealthMockSync() {
+  async function handleTestWealthMockSync() {
     try {
       setIsTestingWealthMock(true);
 
-      const result = prepareMockWealthPortfolioSync("Mock Brokerage");
+      const result = await prepareMockWealthPortfolioSync("Mock Brokerage");
       const firstAsset = result.mappedAssets[0];
 
       Alert.alert(
-        "WealthAPI mock sync ready",
-        `Mapped ${result.mappedAssets.length} assets.\n\nTotal value: €${
+        "WealthAPI backend mock ready",
+        `Mapped ${result.mappedAssets.length} assets via FastAPI.\n\nTotal value: €${
           result.totalMarketValue?.toLocaleString("it-IT") ?? "N/A"
         }\n\nFirst asset: ${firstAsset?.name ?? "N/A"}`
       );
     } catch (error) {
       Alert.alert(
-        "WealthAPI mock failed",
+        "WealthAPI backend mock failed",
         error instanceof Error ? error.message : "Unknown error"
       );
     } finally {
       setIsTestingWealthMock(false);
+    }
+  }
+
+  async function handleCheckBackendStatus() {
+    try {
+      setIsCheckingBackendStatus(true);
+
+      const status = await getBackendWealthApiStatus();
+
+      Alert.alert(
+        "WealthAPI backend status",
+        `Mode: ${status.mode}\n\nBase URL: ${status.base_url}\n\nBearer token configured: ${
+          status.has_bearer_token ? "yes" : "no"
+        }`
+      );
+    } catch (error) {
+      Alert.alert(
+        "Backend status failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    } finally {
+      setIsCheckingBackendStatus(false);
     }
   }
 
@@ -391,6 +415,26 @@ export default function SettingsScreen() {
         <Pressable
           style={[
             styles.secondaryButton,
+            isCheckingBackendStatus && styles.secondaryButtonDisabled,
+          ]}
+          onPress={handleCheckBackendStatus}
+          disabled={isCheckingBackendStatus}
+        >
+          <Text
+            style={[
+              styles.secondaryButtonText,
+              isCheckingBackendStatus && styles.secondaryButtonTextDisabled,
+            ]}
+          >
+            {isCheckingBackendStatus
+              ? "Checking..."
+              : "Check WealthAPI backend status"}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.secondaryButton,
             isTestingWealthMock && styles.secondaryButtonDisabled,
           ]}
           onPress={handleTestWealthMockSync}
@@ -402,7 +446,7 @@ export default function SettingsScreen() {
               isTestingWealthMock && styles.secondaryButtonTextDisabled,
             ]}
           >
-            {isTestingWealthMock ? "Testing..." : "Test WealthAPI mock sync"}
+            {isTestingWealthMock ? "Testing..." : "Test WealthAPI backend mock"}
           </Text>
         </Pressable>
 

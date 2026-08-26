@@ -24,6 +24,15 @@ export type BackendWealthAssetPreviewResponse = {
   mapped_assets: BackendMappedAsset[];
 };
 
+export type BackendWealthApiStatus = {
+  service: string;
+  base_url: string;
+  has_bearer_token: boolean;
+  mode: "mock-only" | "sandbox-ready" | string;
+  mock_preview_endpoint: string;
+  real_preview_endpoint: string;
+};
+
 const VALID_ASSET_TYPES = new Set<AssetType>([
   "cash",
   "etf",
@@ -91,6 +100,10 @@ async function backendRequest<T>(endpoint: string, options: RequestInit = {}) {
   }
 
   return response.json() as Promise<T>;
+}
+
+export async function getBackendWealthApiStatus() {
+  return backendRequest<BackendWealthApiStatus>("/wealthapi/status");
 }
 
 export async function previewBackendMockWealthAssets(
