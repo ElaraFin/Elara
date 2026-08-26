@@ -12,7 +12,7 @@ import {
 
 import { useAppSession } from "../../lib/app-session-store";
 import { useAuth } from "../../lib/auth-store";
-import { getBackendWealthApiStatus } from "../../lib/elara-backend";
+import { getBackendWealthApiStatus, previewBackendRealWealthAssets } from "../../lib/elara-backend";
 import { usePortfolio } from "../../lib/portfolio-store";
 import { supabase } from "../../lib/supabase";
 import {
@@ -30,6 +30,7 @@ export default function SettingsScreen() {
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [isTestingWealthMock, setIsTestingWealthMock] = useState(false);
   const [isCheckingBackendStatus, setIsCheckingBackendStatus] = useState(false);
+  const [isTestingRealSandbox, setIsTestingRealSandbox] = useState(false);
   const [isImportingWealthMock, setIsImportingWealthMock] = useState(false);
   const [isRemovingWealthImport, setIsRemovingWealthImport] = useState(false);
 
@@ -165,6 +166,28 @@ export default function SettingsScreen() {
       );
     } finally {
       setIsTestingWealthMock(false);
+    }
+  }
+
+  async function handleTestRealSandbox() {
+    try {
+      setIsTestingRealSandbox(true);
+
+      const result = await previewBackendRealWealthAssets("wealthAPI");
+
+      Alert.alert(
+        "WealthAPI sandbox ready",
+        `Received ${result.mapped_assets.length} assets from sandbox.\n\nTotal value: €${
+          result.total_market_value?.toLocaleString("it-IT") ?? "N/A"
+        }`
+      );
+    } catch (error) {
+      Alert.alert(
+        "WealthAPI sandbox test failed",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    } finally {
+      setIsTestingRealSandbox(false);
     }
   }
 
@@ -447,6 +470,26 @@ export default function SettingsScreen() {
             ]}
           >
             {isTestingWealthMock ? "Testing..." : "Test WealthAPI backend mock"}
+          </Text>
+        </Pressable>
+
+        <Pressable
+          style={[
+            styles.secondaryButton,
+            isTestingRealSandbox && styles.secondaryButtonDisabled,
+          ]}
+          onPress={handleTestRealSandbox}
+          disabled={isTestingRealSandbox}
+        >
+          <Text
+            style={[
+              styles.secondaryButtonText,
+              isTestingRealSandbox && styles.secondaryButtonTextDisabled,
+            ]}
+          >
+            {isTestingRealSandbox
+              ? "Testing sandbox..."
+              : "Test WealthAPI real sandbox"}
           </Text>
         </Pressable>
 
