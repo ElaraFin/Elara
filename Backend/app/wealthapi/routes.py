@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
+from app.core.config import get_settings
 from app.wealthapi.client import WealthApiError, get_assets_market_value_report
 from app.wealthapi.mapper import map_wealth_asset_to_elara, parse_number
 from app.wealthapi.schemas import (
@@ -10,6 +11,21 @@ from app.wealthapi.schemas import (
 )
 
 router = APIRouter(prefix="/wealthapi", tags=["WealthAPI"])
+
+
+@router.get("/status")
+async def wealthapi_status():
+    settings = get_settings()
+    has_bearer_token = bool(settings.wealth_api_bearer_token)
+
+    return {
+        "service": "wealthapi",
+        "base_url": settings.wealth_api_base_url,
+        "has_bearer_token": has_bearer_token,
+        "mode": "sandbox-ready" if has_bearer_token else "mock-only",
+        "mock_preview_endpoint": "/wealthapi/assets/preview/mock",
+        "real_preview_endpoint": "/wealthapi/assets/preview",
+    }
 
 
 def build_preview_response(
