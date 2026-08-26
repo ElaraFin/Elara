@@ -17,3 +17,8 @@ node_modules/
 # IDE
 .vscode/
 .idea/
+# Python backend
+Backend/.venv/
+Backend/.env
+__pycache__/
+*.pyc

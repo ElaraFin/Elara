@@ -105,6 +105,19 @@ export async function previewBackendMockWealthAssets(
   );
 }
 
+export async function previewBackendRealWealthAssets(provider = "wealthAPI") {
+  return backendRequest<BackendWealthAssetPreviewResponse>(
+    "/wealthapi/assets/preview",
+    {
+      method: "POST",
+      body: JSON.stringify({
+        provider,
+        imported_from_bank: true,
+      }),
+    }
+  );
+}
+
 export function mapBackendAssetToSupabaseInput(
   asset: BackendMappedAsset
 ): SupabaseAssetInput {
